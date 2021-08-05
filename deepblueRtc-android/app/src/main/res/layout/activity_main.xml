@@ -25,32 +25,4 @@
         android:layout_marginBottom="20dp"
         android:text="One2One"
         />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginBottom="20dp"
-        android:background="@color/colorPrimary"
-        />
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"
-        android:text="One2Many"
-        />
-
-    <Button
-        android:id="@+id/btBroadCaster"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Presenter"
-        />
-
-    <Button
-        android:id="@+id/btViewer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Viewer"
-        />
 </LinearLayout>

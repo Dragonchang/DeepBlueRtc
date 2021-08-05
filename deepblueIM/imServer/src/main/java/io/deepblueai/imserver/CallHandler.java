@@ -156,7 +156,7 @@ public class CallHandler extends TextWebSocketHandler {
     String to = calleer.getCallingTo();
 
     if ("accept".equals(callResponse)) {
-      log.debug("Accepted call from '{}' to '{}'", from, to);
+      log.info("Accepted call from '{}' to '{}'", from, to);
 
       CallMediaPipeline pipeline = null;
       try {
@@ -175,6 +175,7 @@ public class CallHandler extends TextWebSocketHandler {
                 response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
                 try {
                   synchronized (callee.getSession()) {
+                    log.info("iceCandidate send  to '{}' :'{}'", callee.getName(), response.toString());
                     callee.getSession().sendMessage(new TextMessage(response.toString()));
                   }
                 } catch (IOException e) {
@@ -194,6 +195,7 @@ public class CallHandler extends TextWebSocketHandler {
                 response.add("candidate", JsonUtils.toJsonObject(event.getCandidate()));
                 try {
                   synchronized (calleer.getSession()) {
+                    log.info("iceCandidate send  to '{}' :'{}'", calleer.getName(), response.toString());
                     calleer.getSession().sendMessage(new TextMessage(response.toString()));
                   }
                 } catch (IOException e) {
