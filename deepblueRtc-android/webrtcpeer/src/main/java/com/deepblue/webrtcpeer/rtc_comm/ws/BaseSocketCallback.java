@@ -1,27 +1,25 @@
 package com.deepblue.webrtcpeer.rtc_comm.ws;
 
 
+import android.util.Log;
 import org.java_websocket.handshake.ServerHandshake;
 
-/**
- * Created by nhancao on 6/20/17.
- */
 
 public class BaseSocketCallback implements SocketCallBack {
-
+    private static final String TAG = "WebsocketIms";
     @Override
     public void onOpen(ServerHandshake serverHandshake) {
-        System.out.println("onOpen");
+        Log.i(TAG,"onOpen");
     }
 
     @Override
     public void onMessage(String serverResponse) {
-        System.out.println("onMessage: " + serverResponse);
+        Log.i(TAG,"onMessage: " + serverResponse);
     }
 
     @Override
     public void onClose(int i, String s, boolean b) {
-        System.out.println("onClose: " + s);
+        Log.i(TAG,"onClose: " + s);
     }
 
     @Override

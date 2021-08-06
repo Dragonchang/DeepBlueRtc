@@ -1,0 +1,4 @@
+<resources>
+    <string name="webrtc_chat_answer">接听</string>
+    <string name="webrtc_chat_hang_up">挂断</string>
+</resources>

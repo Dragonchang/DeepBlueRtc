@@ -6,6 +6,8 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 
 import com.deepblue.rtc.one2one.One2OneActivity_;
+import com.deepblue.rtccall.bean.UserBean;
+import com.deepblue.rtccall.ui.ChatSingleActivity;
 import com.hannesdorfmann.mosby.mvp.MvpActivity;
 import com.deepblue.rtc.R;
 import com.nhancv.npermission.NPermission;
@@ -28,6 +30,15 @@ public class MainActivity extends MvpActivity<MainView, MainPresenter> implement
     @Click(R.id.btOne2One)
     protected void btOne2OneClick() {
         One2OneActivity_.intent(this).start();
+    }
+
+    @Click(R.id.single)
+    protected void libbtOne2OneClick() {
+        UserBean local = new UserBean();
+        local.setName("1");
+        UserBean remote = new UserBean();
+        local.setName("2");
+        ChatSingleActivity.openActivity(this, true, local, remote);
     }
 
     @NonNull
