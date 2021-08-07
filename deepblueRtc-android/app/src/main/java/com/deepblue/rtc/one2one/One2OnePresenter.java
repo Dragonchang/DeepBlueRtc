@@ -37,7 +37,7 @@ import java.util.LinkedList;
 
 public class One2OnePresenter extends MvpBasePresenter<One2OneView>
         implements SignalingEvents, PeerConnectionClient.PeerConnectionEvents {
-    public static final String STREAM_HOST = "ws://10.16.35.160:8443/call";
+    public static final String STREAM_HOST = "ws://192.168.2.101:8443/call";
     private static final String TAG = One2OnePresenter.class.getSimpleName();
     private Application application;
     private SocketService socketService;
@@ -229,7 +229,7 @@ public class One2OnePresenter extends MvpBasePresenter<One2OneView>
         SignalingParameters parameters = new SignalingParameters(
                 new LinkedList<PeerConnection.IceServer>() {
                     {
-                        add(new PeerConnection.IceServer("stun:47.93.186.97:3478?transport=udp"));
+                        add(new PeerConnection.IceServer("stun:139.196.37.113:3478", "dragonchang","123456"));
                     }
                 }, true, null, null, null, null, null);
         onSignalConnected(parameters);
@@ -261,6 +261,7 @@ public class One2OnePresenter extends MvpBasePresenter<One2OneView>
 
     @Override
     public void onSignalConnected(SignalingParameters params) {
+        Log.e(TAG, "SignalingEvents:: onSignalConnected.");
         RxScheduler.runOnUi(o -> {
             if (isViewAttached()) {
                 signalingParameters = params;
@@ -281,6 +282,7 @@ public class One2OnePresenter extends MvpBasePresenter<One2OneView>
 
     @Override
     public void onRemoteDescription(SessionDescription sdp) {
+        Log.e(TAG, "SignalingEvents:: onRemoteDescription.");
         RxScheduler.runOnUi(o -> {
             if (peerConnectionClient == null) {
                 Log.e(TAG, "Received remote SDP for non-initilized peer connection.");
@@ -298,6 +300,7 @@ public class One2OnePresenter extends MvpBasePresenter<One2OneView>
 
     @Override
     public void onRemoteIceCandidate(IceCandidate candidate) {
+        Log.e(TAG, "SignalingEvents:: onRemoteIceCandidate.");
         RxScheduler.runOnUi(o -> {
             if (peerConnectionClient == null) {
                 Log.e(TAG, "Received ICE candidate for a non-initialized peer connection.");
@@ -309,6 +312,7 @@ public class One2OnePresenter extends MvpBasePresenter<One2OneView>
 
     @Override
     public void onRemoteIceCandidatesRemoved(IceCandidate[] candidates) {
+        Log.e(TAG, "SignalingEvents:: onRemoteIceCandidatesRemoved.");
         RxScheduler.runOnUi(o -> {
             if (peerConnectionClient == null) {
                 Log.e(TAG, "Received ICE candidate removals for a non-initialized peer connection.");
@@ -320,6 +324,7 @@ public class One2OnePresenter extends MvpBasePresenter<One2OneView>
 
     @Override
     public void onChannelClose() {
+        Log.e(TAG, "SignalingEvents:: onChannelClose.");
         RxScheduler.runOnUi(o -> {
             if (isViewAttached()) getView().logAndToast("Remote end hung up; dropping PeerConnection");
             disconnect();
@@ -328,11 +333,13 @@ public class One2OnePresenter extends MvpBasePresenter<One2OneView>
 
     @Override
     public void onChannelError(String description) {
+        Log.e(TAG, "SignalingEvents:: onChannelError.");
         Log.e(TAG, "onChannelError: " + description);
     }
 
     @Override
     public void onLocalDescription(SessionDescription sdp) {
+        Log.e(TAG, "PeerConnectionEvents:: onLocalDescription.");
         RxScheduler.runOnUi(o -> {
             if (rtcClient != null) {
                 if (signalingParameters.initiator) {
@@ -350,6 +357,7 @@ public class One2OnePresenter extends MvpBasePresenter<One2OneView>
 
     @Override
     public void onIceCandidate(IceCandidate candidate) {
+        Log.e(TAG, "PeerConnectionEvents:: onIceCandidate.");
         RxScheduler.runOnUi(o -> {
             if (rtcClient != null) {
                 rtcClient.sendLocalIceCandidate(candidate);
@@ -359,6 +367,7 @@ public class One2OnePresenter extends MvpBasePresenter<One2OneView>
 
     @Override
     public void onIceCandidatesRemoved(IceCandidate[] candidates) {
+        Log.e(TAG, "PeerConnectionEvents:: onIceCandidatesRemoved.");
         RxScheduler.runOnUi(o -> {
             if (rtcClient != null) {
                 rtcClient.sendLocalIceCandidateRemovals(candidates);
@@ -368,6 +377,7 @@ public class One2OnePresenter extends MvpBasePresenter<One2OneView>
 
     @Override
     public void onIceConnected() {
+        Log.e(TAG, "PeerConnectionEvents:: onIceConnected.");
         RxScheduler.runOnUi(o -> {
             iceConnected = true;
             callConnected();
@@ -376,6 +386,7 @@ public class One2OnePresenter extends MvpBasePresenter<One2OneView>
 
     @Override
     public void onIceDisconnected() {
+        Log.e(TAG, "PeerConnectionEvents:: onIceDisconnected.");
         RxScheduler.runOnUi(o -> {
             if (isViewAttached()) getView().logAndToast("ICE disconnected");
             iceConnected = false;
@@ -385,11 +396,13 @@ public class One2OnePresenter extends MvpBasePresenter<One2OneView>
 
     @Override
     public void onPeerConnectionClosed() {
+        Log.e(TAG, "PeerConnectionEvents:: onPeerConnectionClosed.");
 
     }
 
     @Override
     public void onPeerConnectionStatsReady(StatsReport[] reports) {
+        Log.e(TAG, "PeerConnectionEvents:: onPeerConnectionStatsReady.");
         RxScheduler.runOnUi(o -> {
             if (iceConnected) {
                 Log.e(TAG, "run: " + reports);
@@ -399,6 +412,7 @@ public class One2OnePresenter extends MvpBasePresenter<One2OneView>
 
     @Override
     public void onPeerConnectionError(String description) {
+        Log.e(TAG, "PeerConnectionEvents:: onPeerConnectionError.");
         Log.e(TAG, "onPeerConnectionError: " + description);
     }
 

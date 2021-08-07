@@ -4,9 +4,11 @@ import android.Manifest;
 import android.content.Intent;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.widget.EditText;
 
 import com.deepblue.rtc.one2one.One2OneActivity_;
 import com.deepblue.rtccall.bean.UserBean;
+import com.deepblue.rtccall.ims.DeepBlueVideoCallManger;
 import com.deepblue.rtccall.ui.ChatSingleActivity;
 import com.hannesdorfmann.mosby.mvp.MvpActivity;
 import com.deepblue.rtc.R;
@@ -15,6 +17,7 @@ import com.nhancv.npermission.NPermission;
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
 import org.androidannotations.annotations.EActivity;
+import org.androidannotations.annotations.ViewById;
 
 /**
  * Created by nhancao on 9/18/16.
@@ -26,21 +29,32 @@ public class MainActivity extends MvpActivity<MainView, MainPresenter> implement
     private NPermission nPermission;
     private boolean isCameraGranted;
     private boolean isAudioGranted;
+    UserBean local = new UserBean();
+    UserBean remote = new UserBean();
+    @ViewById(R.id.userName)
+    protected EditText userName;
+
+    @ViewById(R.id.callUserName)
+    protected EditText callUserName;
+
+    @Click(R.id.register)
+    protected void register() {
+        local.setName(userName.getText().toString());
+        DeepBlueVideoCallManger.getInstance(this.getApplication()).registerUser(local);
+    }
+    @Click(R.id.call)
+    protected void callClick() {
+        local.setName(userName.getText().toString());
+        remote.setName(callUserName.getText().toString());
+        ChatSingleActivity.openActivity(this, true, remote, local);
+    }
+
+
 
     @Click(R.id.btOne2One)
     protected void btOne2OneClick() {
         One2OneActivity_.intent(this).start();
     }
-
-    @Click(R.id.single)
-    protected void libbtOne2OneClick() {
-        UserBean local = new UserBean();
-        local.setName("1");
-        UserBean remote = new UserBean();
-        local.setName("2");
-        ChatSingleActivity.openActivity(this, true, local, remote);
-    }
-
     @NonNull
     @Override
     public MainPresenter createPresenter() {

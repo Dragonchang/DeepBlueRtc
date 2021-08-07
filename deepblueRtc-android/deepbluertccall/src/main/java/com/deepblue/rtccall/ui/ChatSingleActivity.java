@@ -11,7 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
-
+import com.deepblue.rtccall.rtc.RTCEngineConfig;
 import com.deepblue.rtccall.R;
 import com.deepblue.rtccall.bean.UserBean;
 import com.deepblue.rtccall.ims.DeepBlueVideoCallManger;
@@ -22,6 +22,7 @@ import org.webrtc.Camera1Enumerator;
 import org.webrtc.Camera2Enumerator;
 import org.webrtc.CameraEnumerator;
 import org.webrtc.EglBase;
+import org.webrtc.Logging;
 import org.webrtc.RendererCommon;
 import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoCapturer;
@@ -48,6 +49,8 @@ public class ChatSingleActivity extends AppCompatActivity implements NPermission
 
     //本地用户
     private UserBean localUserBean;
+
+    private boolean isSwappedFeeds;
 
     private NPermission mNPermission;
     private boolean isCameraGranted;
@@ -101,8 +104,27 @@ public class ChatSingleActivity extends AppCompatActivity implements NPermission
         vGLSurfaceViewCallPip.setEnableHardwareScaler(true);
         vGLSurfaceViewCallPip.setMirror(true);
         vGLSurfaceViewCallPip.setZOrderMediaOverlay(true);
-        DeepBlueVideoCallManger.getInstance(this.getApplication()).initIMServerManger(this);
+
+        // Swap feeds on pip view click.
+        vGLSurfaceViewCallPip.setOnClickListener(view -> setSwappedFeeds(!isSwappedFeeds));
+        setSwappedFeeds(true);
+
+
+        RTCEngineConfig rtcEngineConfig = new RTCEngineConfig();
+        rtcEngineConfig.isOutgoing = isOutgoing;
+        rtcEngineConfig.localUserBean = localUserBean;
+        rtcEngineConfig.remoteUserBean = remoteUserBean;
+        DeepBlueVideoCallManger.getInstance(this.getApplication()).createRTCEngine(this, rtcEngineConfig);
         startCall();
+    }
+
+    @Override
+    public void setSwappedFeeds(boolean isSwappedFeeds) {
+        this.isSwappedFeeds = isSwappedFeeds;
+        localProxyRenderer.setTarget(isSwappedFeeds ? vGLSurfaceViewCallPip : vGLSurfaceViewCallFull);
+        remoteProxyRenderer.setTarget(isSwappedFeeds ? vGLSurfaceViewCallFull : vGLSurfaceViewCallPip);
+        vGLSurfaceViewCallFull.setMirror(isSwappedFeeds);
+        vGLSurfaceViewCallPip.setMirror(!isSwappedFeeds);
     }
 
     private void replaceFragment(Fragment fragment) {

@@ -6,6 +6,8 @@ import org.webrtc.VideoRenderer;
 
 public interface ViewEntity {
 
+    void setSwappedFeeds(boolean swappedFeed);
+
     VideoCapturer createVideoCapturer();
 
     EglBase.Context getEglBaseContext();
