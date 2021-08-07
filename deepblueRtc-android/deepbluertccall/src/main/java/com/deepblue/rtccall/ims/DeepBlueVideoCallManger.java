@@ -4,7 +4,6 @@ import android.app.Application;
 import android.util.Log;
 
 import com.deepblue.rtccall.bean.UserBean;
-import com.deepblue.rtccall.consts.Urls;
 import com.deepblue.rtccall.ims.request.ImsClientSender;
 import com.deepblue.rtccall.ims.request.VideoManagerCallBack;
 import com.deepblue.rtccall.ims.response.CandidateModel;
@@ -14,28 +13,20 @@ import com.deepblue.rtccall.rtc.KurentoRTCEngine;
 import com.deepblue.rtccall.rtc.PeerConnectionCallBack;
 import com.deepblue.rtccall.rtc.RTCEngineConfig;
 import com.deepblue.rtccall.rtc.RTCEngineCreateFactory;
-import com.deepblue.rtccall.rtc.RTCEngine;
+import com.deepblue.rtccall.ui.ChatSingleActivity;
 import com.deepblue.rtccall.ui.ViewEntity;
-import com.deepblue.webrtcpeer.rtc_comm.ws.DefaultSocketService;
-import com.deepblue.webrtcpeer.rtc_comm.ws.SocketService;
-import com.deepblue.webrtcpeer.rtc_peer.PeerConnectionClient;
-import com.deepblue.webrtcpeer.rtc_peer.SignalingEvents;
-import com.deepblue.webrtcpeer.rtc_peer.SignalingParameters;
 import com.deepblue.webrtcpeer.rtc_peer.config.DefaultConfig;
 
 import org.java_websocket.handshake.ServerHandshake;
 import org.webrtc.IceCandidate;
-import org.webrtc.PeerConnection;
 import org.webrtc.SessionDescription;
 import org.webrtc.StatsReport;
 
-import java.util.LinkedList;
 
 /**
  * 视频通话管理器
  */
-public class DeepBlueVideoCallManger implements SignalingEvents,
-        PeerConnectionCallBack, VideoManagerCallBack,
+public class DeepBlueVideoCallManger implements PeerConnectionCallBack, VideoManagerCallBack,
         ImServerMessageCallBack, ImServerConnectStateCallBack{
     private static final String TAG = "videoCallManager";
 
@@ -54,6 +45,8 @@ public class DeepBlueVideoCallManger implements SignalingEvents,
     private ViewEntity mView;
 
     private static volatile DeepBlueVideoCallManger singleton;
+
+    public UserBean localUserBean;
 
     public static DeepBlueVideoCallManger getInstance(Application application) {
         if (singleton == null) {
@@ -85,6 +78,7 @@ public class DeepBlueVideoCallManger implements SignalingEvents,
      * 用户上线注册
      */
     public void registerUser(UserBean user) {
+        localUserBean = user;
         mImsClientSender.register(user);
     }
 
@@ -123,10 +117,18 @@ public class DeepBlueVideoCallManger implements SignalingEvents,
         this.mRTCEngine.startCall();
     }
 
+    /**
+     *
+     * @return
+     */
     public DefaultConfig getDefaultConfig() {
         return mDefaultConfig;
     }
 
+    /**
+     * 是否拨出通话
+     * @return
+     */
     @Override
     public boolean isOutgoing() {
         if (mRTCEngine == null) {
@@ -136,6 +138,7 @@ public class DeepBlueVideoCallManger implements SignalingEvents,
 
         return mRTCEngine.getRTCEngineConfig().isOutgoing;
     }
+
 
     /************************PeerConnectionEvents*********************/
     @Override
@@ -188,46 +191,25 @@ public class DeepBlueVideoCallManger implements SignalingEvents,
         Log.e(TAG, "onPeerConnectionError: " + description);
     }
 
-    //************************************signal*****************************************//
-    @Override
-    public void onSignalConnected(SignalingParameters params) {
-
-    }
-
-    @Override
-    public void onRemoteDescription(SessionDescription sdp) {
-
-    }
-
-    @Override
-    public void onRemoteIceCandidate(IceCandidate candidate) {
-
-    }
-
-    @Override
-    public void onRemoteIceCandidatesRemoved(IceCandidate[] candidates) {
-
-    }
-
-    @Override
-    public void onChannelClose() {
-
-    }
-
-    @Override
-    public void onChannelError(String description) {
-
-    }
 
     /*****************************IMS消息响应**********************************************/
     @Override
     public void imsRegisterResponse(ServerResponse serverResponse) {
-
+        if(serverResponse.getTypeRes() == ResponseType.REJECTED) {
+            Log.e(TAG, "signal register failed: "+serverResponse.getMessage());
+        } else {
+            Log.i(TAG, "register success");
+        }
     }
 
     @Override
     public void imsIncomingCall(ServerResponse serverResponse) {
-
+        if(application != null) {
+            UserBean remoteUser = new UserBean();
+            remoteUser.setName(serverResponse.getFrom());
+            ChatSingleActivity.openActivity(application.getApplicationContext(), false,
+                    remoteUser, localUserBean);
+        }
     }
 
     @Override
@@ -235,11 +217,12 @@ public class DeepBlueVideoCallManger implements SignalingEvents,
         if (serverResponse.getTypeRes() == ResponseType.REJECTED) {
             Log.e(TAG, "对方拒绝接听");
         } else {
+            //对方接听通话
             Log.w(TAG, "对方接听");
             SessionDescription sdp = new SessionDescription(SessionDescription.Type.ANSWER,
                     serverResponse.getSdpAnswer());
             mRTCEngine.setRemoteDescription(sdp);
-
+            mView.updateToDialingStatus();
         }
     }
 

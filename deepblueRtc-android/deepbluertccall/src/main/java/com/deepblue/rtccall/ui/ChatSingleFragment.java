@@ -7,6 +7,8 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.deepblue.rtccall.R;
@@ -19,21 +21,26 @@ import com.deepblue.rtccall.R;
  */
 public class ChatSingleFragment extends Fragment {
 
-    public View rootView;
-    private TextView wr_switch_hang_up;
-    private boolean enableMic = true;
-    private boolean enableSpeaker = false;
-    private boolean videoEnable;
+    private View rootView;
+
+    //拨出和接听显示信息控制
+    LinearLayout mInviteeInfoContainer;
+
+    //拨出电话界面
+    private LinearLayout mOutgoingView;
+
+    //来电通话界面
+    private RelativeLayout mIncomingView;
+
+    //通话中界面
+    private LinearLayout mDialingView;
+
     private ChatSingleActivity activity;
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         activity = (ChatSingleActivity) getActivity();
-        Bundle bundle = getArguments();
-        if (bundle != null) {
-            videoEnable = bundle.getBoolean("videoEnable");
-        }
     }
 
     @Override
@@ -46,12 +53,59 @@ public class ChatSingleFragment extends Fragment {
         return rootView;
     }
 
+    /**
+     * 更新到拨打通话中状态
+     */
+    public void updateToOutgoingStatus() {
+        mInviteeInfoContainer.setVisibility(View.VISIBLE);
+        mOutgoingView.setVisibility(View.VISIBLE);
+        mIncomingView.setVisibility(View.GONE);
+        mDialingView.setVisibility(View.GONE);
+    }
+
+    /**
+     * 更新到来电状态
+     */
+    public void updateToIncomingCallStatus() {
+        mInviteeInfoContainer.setVisibility(View.VISIBLE);
+        mOutgoingView.setVisibility(View.GONE);
+        mIncomingView.setVisibility(View.VISIBLE);
+        mDialingView.setVisibility(View.GONE);
+    }
+
+    /**
+     * 更新到接听状态
+     */
+    public void updateToDialingStatus() {
+        mInviteeInfoContainer.setVisibility(View.GONE);
+        mOutgoingView.setVisibility(View.GONE);
+        mIncomingView.setVisibility(View.GONE);
+        mDialingView.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * 更新到挂断电话状态
+     */
+    public void updateToHangUpStatus() {
+
+    }
+
     private View onInitloadView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_room_control_single, container, false);
     }
 
     private void initView(View rootView) {
-        //wr_switch_hang_up = rootView.findViewById(R.id.wr_switch_hang_up);
+        //拨出和接听显示信息控制
+        mInviteeInfoContainer = rootView.findViewById(R.id.inviteeInfoContainer);
+
+        //拨出通话
+        mOutgoingView = rootView.findViewById(R.id.outgoingActionContainer);
+
+        //来电通话
+        mIncomingView = rootView.findViewById(R.id.incomingActionContainer);
+
+        //通话中
+        mDialingView = rootView.findViewById(R.id.connectedActionContainer);
     }
 
     private void initListener() {

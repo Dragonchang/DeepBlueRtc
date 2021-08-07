@@ -18,6 +18,7 @@ public enum CallState {
      * 有通话到来
      */
     INCOMING,
+
     /**
      * 通话中
      */
