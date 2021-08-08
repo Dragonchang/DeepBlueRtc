@@ -26,9 +26,13 @@ public class ChatSingleFragment extends Fragment {
 
     //拨出和接听显示信息控制
     LinearLayout mInviteeInfoContainer;
+    TextView nameTextView;
+    TextView descTextView;
 
     //拨出电话界面
     private LinearLayout mOutgoingView;
+    //取消拨出
+    private ImageView outgoingHangupImageView;
 
     //来电通话界面
     private LinearLayout mIncomingView;
@@ -64,6 +68,8 @@ public class ChatSingleFragment extends Fragment {
      */
     public void updateToOutgoingStatus() {
         mInviteeInfoContainer.setVisibility(View.VISIBLE);
+        nameTextView.setText(activity.remoteUserBean.getName());
+        descTextView.setText(activity.getString(R.string.webrtc_chat_outgoing_desc));
         mOutgoingView.setVisibility(View.VISIBLE);
         mIncomingView.setVisibility(View.GONE);
         mDialingView.setVisibility(View.GONE);
@@ -74,6 +80,8 @@ public class ChatSingleFragment extends Fragment {
      */
     public void updateToIncomingCallStatus() {
         mInviteeInfoContainer.setVisibility(View.VISIBLE);
+        nameTextView.setText(activity.remoteUserBean.getName());
+        descTextView.setText(activity.getString(R.string.webrtc_chat_incoming_desc));
         mOutgoingView.setVisibility(View.GONE);
         mIncomingView.setVisibility(View.VISIBLE);
         mDialingView.setVisibility(View.GONE);
@@ -103,9 +111,11 @@ public class ChatSingleFragment extends Fragment {
     private void initView(View rootView) {
         //拨出和接听显示信息控制
         mInviteeInfoContainer = rootView.findViewById(R.id.inviteeInfoContainer);
-
+        nameTextView = rootView.findViewById(R.id.nameTextView);
+        descTextView = rootView.findViewById(R.id.descTextView);
         //拨出通话
         mOutgoingView = rootView.findViewById(R.id.outgoingActionContainer);
+        outgoingHangupImageView = rootView.findViewById(R.id.outgoingHangupImageView);
 
         //来电通话
         mIncomingView = rootView.findViewById(R.id.incomingActionContainer);
@@ -133,6 +143,13 @@ public class ChatSingleFragment extends Fragment {
         });
 
         connectedHangupImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.hangUp();
+            }
+        });
+
+        outgoingHangupImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 activity.hangUp();

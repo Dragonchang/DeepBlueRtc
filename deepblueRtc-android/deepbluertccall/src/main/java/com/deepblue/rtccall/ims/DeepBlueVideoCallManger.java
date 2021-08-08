@@ -151,10 +151,10 @@ public class DeepBlueVideoCallManger implements PeerConnectionCallBack, VideoMan
             Log.e(TAG, "disconnect mRTCEngine is null");
             return;
         }
+        mRTCEngine.disconnect();
         if(mImsClientSender != null) {
             mImsClientSender.sendStopCall();
         }
-        mRTCEngine.disconnect();
     }
     /**
      *
@@ -290,7 +290,11 @@ public class DeepBlueVideoCallManger implements PeerConnectionCallBack, VideoMan
     @Override
     public void imsStopCommunication(ServerResponse serverResponse) {
         RxScheduler.runOnUi(o -> {
-            disconnect();
+            if(mRTCEngine == null) {
+                Log.e(TAG, "disconnect mRTCEngine is null");
+                return;
+            }
+            mRTCEngine.disconnect();
             if(mView != null) {
                 mView.updateToHangUpStatus();
             }

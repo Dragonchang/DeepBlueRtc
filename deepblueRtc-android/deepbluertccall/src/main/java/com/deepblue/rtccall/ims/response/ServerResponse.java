@@ -22,6 +22,9 @@ public class ServerResponse extends BaseResponse implements Serializable {
     private boolean success;
     @SerializedName("from")
     private String from;
+    @SerializedName("isConnect")
+    private boolean isConnect;
+
 
     public ResponseID getIdRes() {
         return ResponseID.getIdRes(getId());

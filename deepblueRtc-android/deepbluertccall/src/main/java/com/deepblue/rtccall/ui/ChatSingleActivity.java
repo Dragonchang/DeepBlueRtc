@@ -49,7 +49,7 @@ public class ChatSingleActivity extends AppCompatActivity implements NPermission
     private boolean isOutgoing = false;
 
     //拨打通话对象和来电的对象
-    private UserBean remoteUserBean;
+    public UserBean remoteUserBean;
 
     //本地用户
     private UserBean localUserBean;
