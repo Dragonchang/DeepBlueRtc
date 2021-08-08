@@ -65,7 +65,7 @@ public class DeepBlueVideoCallManger implements PeerConnectionCallBack, VideoMan
         initIMServerManger();
     }
 
-    public void initIMServerManger() {
+    private void initIMServerManger() {
         this.mImsClientSender = new ImsClientSender(application);
         this.mImsMessageCallBack = new ImServerCallBack();
         this.mImsMessageCallBack.registerImsMessageCallBack(this);
@@ -73,6 +73,14 @@ public class DeepBlueVideoCallManger implements PeerConnectionCallBack, VideoMan
         this.mCallStateManger = new CallStateManager();
         this.mDefaultConfig = new DefaultConfig();
         connectIMServer();
+    }
+
+    public void registerImsMessageCallBack(ImServerMessageCallBack imServerMessageCallBack) {
+        this.mImsMessageCallBack.registerImsMessageCallBack(imServerMessageCallBack);
+    }
+
+    public void registerImsConnectCallBack(ImServerConnectStateCallBack imServerConnectStateCallBack) {
+        this.mImsMessageCallBack.registerImsConnectCallBack(imServerConnectStateCallBack);
     }
 
     /**
