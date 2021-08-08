@@ -65,6 +65,7 @@ public class KurentoOne2OneRTCClient implements RTCClient {
 
     }
 
+
     @Override
     public void sendLocalIceCandidate(IceCandidate iceCandidate) {
         try {

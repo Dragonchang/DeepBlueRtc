@@ -12,6 +12,8 @@ public interface ViewEntity {
 
     EglBase.Context getEglBaseContext();
 
+    EglBase getEglBase();
+
     VideoRenderer.Callbacks getLocalProxyRenderer();
 
     VideoRenderer.Callbacks getRemoteProxyRenderer();

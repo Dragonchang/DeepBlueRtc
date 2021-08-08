@@ -143,6 +143,9 @@ public class DeepBlueVideoCallManger implements PeerConnectionCallBack, VideoMan
             Log.e(TAG, "disconnect mRTCEngine is null");
             return;
         }
+        if(mImsClientSender != null) {
+            mImsClientSender.sendStopCall();
+        }
         mRTCEngine.disconnect();
     }
     /**

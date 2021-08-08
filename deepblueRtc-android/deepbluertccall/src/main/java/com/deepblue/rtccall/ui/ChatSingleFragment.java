@@ -39,6 +39,7 @@ public class ChatSingleFragment extends Fragment {
 
     //通话中界面
     private LinearLayout mDialingView;
+    private ImageView connectedHangupImageView;
 
     private ChatSingleActivity activity;
 
@@ -113,6 +114,7 @@ public class ChatSingleFragment extends Fragment {
 
         //通话中
         mDialingView = rootView.findViewById(R.id.connectedActionContainer);
+        connectedHangupImageView = rootView.findViewById(R.id.connectedHangupImageView);
     }
 
     private void initListener() {
@@ -127,6 +129,13 @@ public class ChatSingleFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 activity.incomingCall();
+            }
+        });
+
+        connectedHangupImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.hangUp();
             }
         });
     }

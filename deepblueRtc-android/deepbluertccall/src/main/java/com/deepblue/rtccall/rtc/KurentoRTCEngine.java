@@ -93,6 +93,10 @@ public class KurentoRTCEngine implements RTCEngine, PeerConnectionClient.PeerCon
             audioManager.stop();
             audioManager = null;
         }
+
+        if(view != null && view.getEglBase() != null) {
+            view.getEglBase().release();
+        }
     }
 
     public RTCEngineConfig getRTCEngineConfig() {

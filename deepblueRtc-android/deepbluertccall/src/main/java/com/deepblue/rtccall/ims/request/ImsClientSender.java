@@ -96,4 +96,15 @@ public class ImsClientSender {
             e.printStackTrace();
         }
     }
+
+    public void sendStopCall() {
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("id", "stop");
+            mIMServer.sendMessage(obj.toString());
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
 }

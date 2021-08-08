@@ -242,6 +242,11 @@ public class ChatSingleActivity extends AppCompatActivity implements NPermission
     }
 
     @Override
+    public EglBase getEglBase() {
+        return rootEglBase;
+    }
+
+    @Override
     public VideoRenderer.Callbacks getLocalProxyRenderer() {
         return localProxyRenderer;
     }
