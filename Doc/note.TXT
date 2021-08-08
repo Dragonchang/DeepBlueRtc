@@ -3,3 +3,5 @@ docker pull kurento/kurento-media-server:6.16
 docker run -itd --name kms --net=host -p 8888:8888 kurento/kurento-media-server:6.16 /bin/bash
 
 docker logs kms
+
+coturn部署

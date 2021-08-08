@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -30,7 +31,11 @@ public class ChatSingleFragment extends Fragment {
     private LinearLayout mOutgoingView;
 
     //来电通话界面
-    private RelativeLayout mIncomingView;
+    private LinearLayout mIncomingView;
+    //挂断电话button
+    private ImageView incomingHangupImageView;
+    //接听通话按钮
+    private ImageView acceptImageView;
 
     //通话中界面
     private LinearLayout mDialingView;
@@ -103,18 +108,27 @@ public class ChatSingleFragment extends Fragment {
 
         //来电通话
         mIncomingView = rootView.findViewById(R.id.incomingActionContainer);
+        incomingHangupImageView = rootView.findViewById(R.id.incomingHangupImageView);
+        acceptImageView = rootView.findViewById(R.id.acceptImageView);
 
         //通话中
         mDialingView = rootView.findViewById(R.id.connectedActionContainer);
     }
 
     private void initListener() {
-//        wr_switch_hang_up.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                activity.hangUp();
-//            }
-//        });
+        incomingHangupImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.hangUp();
+            }
+        });
+
+        acceptImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.incomingCall();
+            }
+        });
     }
 
 }

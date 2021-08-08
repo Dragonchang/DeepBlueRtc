@@ -337,6 +337,10 @@ public class One2OnePresenter extends MvpBasePresenter<One2OneView>
         Log.e(TAG, "onChannelError: " + description);
     }
 
+
+
+
+
     @Override
     public void onLocalDescription(SessionDescription sdp) {
         Log.e(TAG, "PeerConnectionEvents:: onLocalDescription.");

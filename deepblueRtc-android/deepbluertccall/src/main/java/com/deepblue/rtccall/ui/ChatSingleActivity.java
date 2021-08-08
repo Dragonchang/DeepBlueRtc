@@ -10,8 +10,10 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
+
 import com.deepblue.rtccall.rtc.RTCEngineConfig;
 import com.deepblue.rtccall.R;
 import com.deepblue.rtccall.bean.UserBean;
@@ -32,14 +34,14 @@ import org.webrtc.VideoRenderer;
 /**
  * one2one 视频语音聊天
  */
-public class ChatSingleActivity extends AppCompatActivity implements NPermission.OnPermissionResult, ViewEntity{
+public class ChatSingleActivity extends AppCompatActivity implements NPermission.OnPermissionResult, ViewEntity {
+    private static final String TAG = "ChatSingleActivity";
 
     private ChatSingleFragment mChatSingleFragment;
     protected SurfaceViewRenderer vGLSurfaceViewCallFull;
     protected SurfaceViewRenderer vGLSurfaceViewCallPip;
     private ProxyRenderer localProxyRenderer;
     private ProxyRenderer remoteProxyRenderer;
-
 
     private EglBase rootEglBase;
 
@@ -82,7 +84,7 @@ public class ChatSingleActivity extends AppCompatActivity implements NPermission
     @Override
     protected void onResume() {
         super.onResume();
-        if(isOutgoing) {
+        if (isOutgoing) {
             updateToOutgoingStatus();
         } else {
             updateToIncomingCallStatus();
@@ -94,12 +96,13 @@ public class ChatSingleActivity extends AppCompatActivity implements NPermission
         super.onDestroy();
 
     }
+
     private void initVar() {
         mNPermission = new NPermission(true);
         Intent intent = getIntent();
         isOutgoing = intent.getBooleanExtra("isOutgoing", false);
-        remoteUserBean = (UserBean)intent.getSerializableExtra("remoteUserBean");
-        localUserBean = (UserBean)intent.getSerializableExtra("localUserBean");
+        remoteUserBean = (UserBean) intent.getSerializableExtra("remoteUserBean");
+        localUserBean = (UserBean) intent.getSerializableExtra("localUserBean");
         mChatSingleFragment = new ChatSingleFragment();
         replaceFragment(mChatSingleFragment);
 
@@ -131,7 +134,7 @@ public class ChatSingleActivity extends AppCompatActivity implements NPermission
         rtcEngineConfig.localUserBean = localUserBean;
         rtcEngineConfig.remoteUserBean = remoteUserBean;
         DeepBlueVideoCallManger.getInstance(this.getApplication()).createRTCEngine(this, rtcEngineConfig);
-        if(isOutgoing) {
+        if (isOutgoing) {
             startCall();
         }
     }
@@ -157,9 +160,10 @@ public class ChatSingleActivity extends AppCompatActivity implements NPermission
 
     //接听电话
     public void incomingCall() {
+        Log.w(TAG, "user accept user:" + remoteUserBean.getName() + " incoming call");
         if (Build.VERSION.SDK_INT < 23) {
             //接听电话
-
+            DeepBlueVideoCallManger.getInstance(this.getApplication()).acceptIncomingCall();
         } else {
             mNPermission.requestPermission(this, Manifest.permission.CAMERA);
         }
@@ -167,7 +171,8 @@ public class ChatSingleActivity extends AppCompatActivity implements NPermission
 
     // 挂断
     public void hangUp() {
-        //disConnect();
+        Log.w(TAG, "user hangUp user:" + remoteUserBean.getName() + " incoming call");
+        DeepBlueVideoCallManger.getInstance(this.getApplication()).disconnect();
         this.finish();
     }
 
@@ -186,21 +191,28 @@ public class ChatSingleActivity extends AppCompatActivity implements NPermission
                 this.isCameraGranted = isGranted;
                 if (!isGranted) {
                     mNPermission.requestPermission(this, Manifest.permission.CAMERA);
-                } else if(!isAudioGranted) {
+                } else if (!isAudioGranted) {
                     mNPermission.requestPermission(this, Manifest.permission.RECORD_AUDIO);
                 } else {
-                    DeepBlueVideoCallManger.getInstance(this.getApplication()).StartCalling(localUserBean, remoteUserBean);
+                    if(isOutgoing) {
+                        DeepBlueVideoCallManger.getInstance(this.getApplication()).StartCalling(localUserBean, remoteUserBean);
+                    } else {
+                        DeepBlueVideoCallManger.getInstance(this.getApplication()).acceptIncomingCall();
+                    }
                 }
                 break;
             case Manifest.permission.RECORD_AUDIO:
                 this.isAudioGranted = isGranted;
                 if (!isGranted) {
                     mNPermission.requestPermission(this, Manifest.permission.RECORD_AUDIO);
-                } else if(!isCameraGranted) {
+                } else if (!isCameraGranted) {
                     mNPermission.requestPermission(this, Manifest.permission.CAMERA);
                 } else {
-                    DeepBlueVideoCallManger.getInstance(this.getApplication()).StartCalling(localUserBean, remoteUserBean);
-                }
+                    if(isOutgoing) {
+                        DeepBlueVideoCallManger.getInstance(this.getApplication()).StartCalling(localUserBean, remoteUserBean);
+                    } else {
+                        DeepBlueVideoCallManger.getInstance(this.getApplication()).acceptIncomingCall();
+                    }                }
                 break;
             default:
                 break;
@@ -243,16 +255,16 @@ public class ChatSingleActivity extends AppCompatActivity implements NPermission
     @Override
     public void updateToOutgoingStatus() {
         runOnUiThread(() -> {
-                if (mChatSingleFragment != null) {
-                    mChatSingleFragment.updateToOutgoingStatus();
-                }
-            });
+            if (mChatSingleFragment != null) {
+                mChatSingleFragment.updateToOutgoingStatus();
+            }
+        });
     }
 
     @Override
     public void updateToIncomingCallStatus() {
         runOnUiThread(() -> {
-            if(mChatSingleFragment != null) {
+            if (mChatSingleFragment != null) {
                 mChatSingleFragment.updateToIncomingCallStatus();
             }
         });
@@ -261,7 +273,7 @@ public class ChatSingleActivity extends AppCompatActivity implements NPermission
     @Override
     public void updateToDialingStatus() {
         runOnUiThread(() -> {
-            if(mChatSingleFragment != null) {
+            if (mChatSingleFragment != null) {
                 mChatSingleFragment.updateToDialingStatus();
             }
         });
@@ -270,7 +282,8 @@ public class ChatSingleActivity extends AppCompatActivity implements NPermission
     @Override
     public void updateToHangUpStatus() {
         runOnUiThread(() -> {
-            if(mChatSingleFragment != null) {
+            finish();
+            if (mChatSingleFragment != null) {
                 mChatSingleFragment.updateToHangUpStatus();
             }
         });

@@ -15,6 +15,7 @@ import com.deepblue.rtccall.rtc.RTCEngineConfig;
 import com.deepblue.rtccall.rtc.RTCEngineCreateFactory;
 import com.deepblue.rtccall.ui.ChatSingleActivity;
 import com.deepblue.rtccall.ui.ViewEntity;
+import com.deepblue.rtccall.utils.RxScheduler;
 import com.deepblue.webrtcpeer.rtc_peer.config.DefaultConfig;
 
 import org.java_websocket.handshake.ServerHandshake;
@@ -112,11 +113,38 @@ public class DeepBlueVideoCallManger implements PeerConnectionCallBack, VideoMan
             Log.e(TAG, "StartCalling failed, reason: user info is null");
             return;
         }
+        if(mRTCEngine == null) {
+            Log.e(TAG, "StartCalling mRTCEngine is null");
+            return;
+        }
         this.mRTCEngine.createPeerConnectionFactory(mDefaultConfig.createPeerConnectionParams());
 
         this.mRTCEngine.startCall();
     }
 
+    /**
+     * 接听通话
+     */
+    public void acceptIncomingCall() {
+        if(mRTCEngine == null) {
+            Log.e(TAG, "StartCalling mRTCEngine is null");
+            return;
+        }
+        this.mRTCEngine.createPeerConnectionFactory(mDefaultConfig.createPeerConnectionParams());
+
+        this.mRTCEngine.startCall();
+    }
+
+    /**
+     * 结束通话
+     */
+    public void disconnect() {
+        if(mRTCEngine == null) {
+            Log.e(TAG, "disconnect mRTCEngine is null");
+            return;
+        }
+        mRTCEngine.disconnect();
+    }
     /**
      *
      * @return
@@ -204,26 +232,32 @@ public class DeepBlueVideoCallManger implements PeerConnectionCallBack, VideoMan
 
     @Override
     public void imsIncomingCall(ServerResponse serverResponse) {
-        if(application != null) {
-            UserBean remoteUser = new UserBean();
-            remoteUser.setName(serverResponse.getFrom());
-            ChatSingleActivity.openActivity(application.getApplicationContext(), false,
-                    remoteUser, localUserBean);
-        }
+        RxScheduler.runOnUi(o -> {
+            if(application != null) {
+                UserBean remoteUser = new UserBean();
+                remoteUser.setName(serverResponse.getFrom());
+                ChatSingleActivity.openActivity(application.getApplicationContext(), false,
+                        remoteUser, localUserBean);
+            }
+        });
     }
 
     @Override
     public void imsCallResponse(ServerResponse serverResponse) {
-        if (serverResponse.getTypeRes() == ResponseType.REJECTED) {
-            Log.e(TAG, "对方拒绝接听");
-        } else {
-            //对方接听通话
-            Log.w(TAG, "对方接听");
-            SessionDescription sdp = new SessionDescription(SessionDescription.Type.ANSWER,
-                    serverResponse.getSdpAnswer());
-            mRTCEngine.setRemoteDescription(sdp);
-            mView.updateToDialingStatus();
-        }
+        RxScheduler.runOnUi(o -> {
+            if (serverResponse.getTypeRes() == ResponseType.REJECTED) {
+                Log.e(TAG, "对方拒绝接听");
+                disconnect();
+                mView.updateToHangUpStatus();
+            } else {
+                //对方接听通话
+                Log.w(TAG, "对方接听");
+                SessionDescription sdp = new SessionDescription(SessionDescription.Type.ANSWER,
+                        serverResponse.getSdpAnswer());
+                mRTCEngine.setRemoteDescription(sdp);
+                mView.updateToDialingStatus();
+            }
+        });
     }
 
     @Override
@@ -236,12 +270,20 @@ public class DeepBlueVideoCallManger implements PeerConnectionCallBack, VideoMan
 
     @Override
     public void imsStartCommunication(ServerResponse serverResponse) {
-
+        SessionDescription sdp = new SessionDescription(SessionDescription.Type.ANSWER,
+                serverResponse.getSdpAnswer());
+        mRTCEngine.setRemoteDescription(sdp);
+        mView.updateToDialingStatus();
     }
 
     @Override
     public void imsStopCommunication(ServerResponse serverResponse) {
-
+        RxScheduler.runOnUi(o -> {
+            disconnect();
+            if(mView != null) {
+                mView.updateToHangUpStatus();
+            }
+        });
     }
 
     /*********************ims connect status *************************/
