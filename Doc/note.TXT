@@ -5,4 +5,13 @@ docker run -itd --name kms --net=host -p 8888:8888 kurento/kurento-media-server:
 docker logs kms
 
 coturn部署
+
+v4l2-ctl --list-devices
+vi-output, imx219 7-0010 (platform:54080000.vi:0):
+	/dev/video0
+
+SKT-SR800C-127A (usb-70090000.xusb-2.3):
+	/dev/video1
+	
+	
 Ai615181310
