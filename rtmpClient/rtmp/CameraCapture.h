@@ -30,6 +30,7 @@ private:
 	string gstreamerPipeline();
 	bool openCamera(int capture_width = 1280, int capture_height = 720, int display_width = 1280, int display_height = 720, int framerate = 30, int flip_method = 0);
 	bool isCISCamera();
+	bool isCameraOpen();
 private:
 	Looper* mMainLooper;
 	CameraCaptureHandler *mCaptureHandler;
@@ -48,7 +49,7 @@ private:
 	int mFramerate;
 	int mFlipMethod;
 
-	//默认使用/dev/video0
+	//默认使用/dev/video1 usb
 	int mCameraDeviceIndex;
 
 };

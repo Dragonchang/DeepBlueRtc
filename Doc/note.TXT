@@ -12,6 +12,7 @@ vi-output, imx219 7-0010 (platform:54080000.vi:0):
 
 SKT-SR800C-127A (usb-70090000.xusb-2.3):
 	/dev/video1
-	
+
+v4l2-ctl -d /dev/video0 --list-formats-ext
 	
 Ai615181310

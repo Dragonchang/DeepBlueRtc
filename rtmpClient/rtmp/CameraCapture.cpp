@@ -6,7 +6,7 @@ CameraCapture::CameraCapture()
 	//使用主线程作为采集摄像头信号的线程
 	mCaptureHandler = new CameraCaptureHandler(mCapturethread->getLooper(), this);
 	mHasOpenCamera = false;
-	mCameraDeviceIndex = 0;
+	mCameraDeviceIndex = 1;
 }
 
 CameraCapture::~CameraCapture()
@@ -65,7 +65,7 @@ bool CameraCapture::openCamera(int capture_width, int capture_height, int displa
 			mVideoCapture->set(cv::CAP_PROP_FRAME_HEIGHT, 480);
 			mVideoCapture->set(cv::CAP_PROP_FPS, 30);
 		}
-		if (mVideoCapture->isOpened())
+		if (isCameraOpen())
 		{
 			mHasOpenCamera = true;
 			int inWidth = mVideoCapture->get(cv::CAP_PROP_FRAME_WIDTH);
@@ -100,6 +100,25 @@ bool CameraCapture::openCamera(int capture_width, int capture_height, int displa
 *****************************************************************/
 bool CameraCapture::isCISCamera()
 {
+	if (mCameraDeviceIndex == 0)
+	{
+		return true;
+	}
+	return false;
+}
+
+
+/*****************************************************************
+* name:isCameraOpen
+* function:摄像头是否打开
+*
+*****************************************************************/
+bool CameraCapture::isCameraOpen()
+{
+	if (mVideoCapture != NULL && mVideoCapture->isOpened())
+	{
+		return true;
+	}
 	return false;
 }
 
@@ -110,13 +129,15 @@ bool CameraCapture::isCISCamera()
 *****************************************************************/
 void CameraCapture::doCapture()
 {
-	if (mVideoCapture == NULL || !mHasOpenCamera)
+	if (!isCameraOpen())
 	{
 		printf("doCapture with close camera\n");
 		bool isSuccess = openCamera();
 		if (!isSuccess)
 		{
 			printf("openCamera failed!\n");
+			//sleep for reduce CPU time 
+			sleep(1);
 			return;
 		}
 	}
