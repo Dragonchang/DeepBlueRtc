@@ -8,13 +8,28 @@
 #include "../handlerThread/Message.h"
 #include "../handlerThread/Looper.h"
 #include "../handlerThread/NThread.h"
+#include "./PushRtmp.h"
 
 #include <opencv4/opencv2/highgui.hpp>
 #include <opencv4/opencv2/opencv.hpp>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+#include "libavutil/avutil.h"  
+#include "libavcodec/avcodec.h"  
+#include "libavformat/avformat.h"  
+#include "libswscale/swscale.h"  
+#include <libavutil/imgutils.h>  
+#ifdef __cplusplus
+}
+#endif
+
 using namespace std;
 using namespace cv;
 class CameraCaptureHandler;
+class PushRtmp;
 class CameraCapture
 {
 public:
@@ -28,11 +43,12 @@ public:
 
 private:
 	string gstreamerPipeline();
-	bool openCamera(int capture_width = 1280, int capture_height = 720, int display_width = 1280, int display_height = 720, int framerate = 30, int flip_method = 0);
+	bool openCamera();
 	bool isCISCamera();
 	bool isCameraOpen();
+	AVFrame* cvmatToAvframe(Mat* image);
+
 private:
-	Looper* mMainLooper;
 	CameraCaptureHandler *mCaptureHandler;
 	NThread *mCapturethread;
 
@@ -51,6 +67,8 @@ private:
 
 	//ƒ¨»œ π”√/dev/video1 usb
 	int mCameraDeviceIndex;
+
+	PushRtmp *mPushRtmp;
 
 };
 

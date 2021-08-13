@@ -16,3 +16,6 @@ SKT-SR800C-127A (usb-70090000.xusb-2.3):
 v4l2-ctl -d /dev/video0 --list-formats-ext
 	
 Ai615181310
+
+
+ffmpeg  -re -i "./test.flv" -vcodec copy -acodec copy -f flv -y rtmp://localhost/live/livestream/2

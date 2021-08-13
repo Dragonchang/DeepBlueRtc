@@ -1,17 +1,42 @@
 #include"CameraCapture.h"
 
+/*****************************************************************
+*
+* function：CameraCapture
+* 作用：构造函数
+*
+*****************************************************************/
 CameraCapture::CameraCapture()
 {
 	mCapturethread = new NThread();
-	//使用主线程作为采集摄像头信号的线程
 	mCaptureHandler = new CameraCaptureHandler(mCapturethread->getLooper(), this);
 	mHasOpenCamera = false;
 	mCameraDeviceIndex = 1;
+	mCaptureWidth = 640;
+	mCaptureHeight = 480;
+	mDisplayWidth = 640;
+	mDisplayHeight = 480;
+	mFramerate = 30;
+	mFlipMethod = 0;
+	mPushRtmp = new PushRtmp(mDisplayWidth, mDisplayHeight, mFramerate, mCameraDeviceIndex);
 }
 
+/*****************************************************************
+*
+* function：~CameraCapture
+* 作用：析构函数
+*
+*****************************************************************/
 CameraCapture::~CameraCapture()
 {
-
+	if (mVideoCapture != NULL) {
+		if (mVideoCapture->isOpened())
+		{
+			mVideoCapture->release();
+		}
+		delete mVideoCapture;
+		mVideoCapture = NULL;
+	}
 }
 
 /*****************************************************************
@@ -33,24 +58,16 @@ void CameraCapture::startCameraCapture()
 	mCaptureHandler->sendMessage(message);
 }
 
-
-
 /*****************************************************************
 *
 * function：openCamera
 * 作用：
 *
 *****************************************************************/
-bool CameraCapture::openCamera(int capture_width, int capture_height, int display_width, int display_height, int framerate, int flip_method)
+bool CameraCapture::openCamera()
 {
 	try
 	{
-		mCaptureWidth = capture_width;
-		mCaptureHeight = capture_height;
-		mDisplayWidth = display_width;
-		mDisplayHeight = display_height;
-		mFramerate = framerate;
-		mFlipMethod = flip_method;
 		if (isCISCamera())
 		{
 			printf("openCamera index 0\n");
@@ -61,9 +78,9 @@ bool CameraCapture::openCamera(int capture_width, int capture_height, int displa
 		{
 			printf("openCamera index 1\n");
 			mVideoCapture = new VideoCapture(1);
-			mVideoCapture->set(cv::CAP_PROP_FRAME_WIDTH, 640);
-			mVideoCapture->set(cv::CAP_PROP_FRAME_HEIGHT, 480);
-			mVideoCapture->set(cv::CAP_PROP_FPS, 30);
+			mVideoCapture->set(cv::CAP_PROP_FRAME_WIDTH, mCaptureWidth);
+			mVideoCapture->set(cv::CAP_PROP_FRAME_HEIGHT, mCaptureHeight);
+			mVideoCapture->set(cv::CAP_PROP_FPS, mFramerate);
 		}
 		if (isCameraOpen())
 		{
@@ -123,6 +140,38 @@ bool CameraCapture::isCameraOpen()
 }
 
 /*****************************************************************
+* name:cvmatToAvframe
+* function:Mat 转 AVFrame 
+*
+*****************************************************************/
+AVFrame* CameraCapture::cvmatToAvframe(Mat* image)
+{
+	AVFrame *avframe = av_frame_alloc();
+	if ( avframe!= NULL && !image->empty()) {
+		int width = image->cols;
+		int height = image->rows;
+		printf("cvmatToAvframe inWidth: %d, height: %d\n", width, height);
+		avframe->format = AV_PIX_FMT_YUV420P;
+		avframe->width = width;
+		avframe->height = height;
+		av_frame_get_buffer(avframe, 0);
+		av_frame_make_writable(avframe);
+		cv::Mat yuv; // convert to yuv420p first
+		cv::cvtColor(*image, yuv, cv::COLOR_BGR2YUV_I420);
+		// calc frame size
+		int frame_size = image->cols * image->rows;
+		unsigned char *pdata = yuv.data;
+		avframe->data[0] = pdata; // fill y
+		avframe->data[1] = pdata + frame_size; // fill u
+		avframe->data[2] = pdata + frame_size * 5 / 4; // fill v
+	}
+	else {
+		return NULL;
+	}
+	return avframe;
+}
+
+/*****************************************************************
 * name:doCapture
 * function:使用opencv抓取摄像头信号
 *
@@ -153,6 +202,7 @@ void CameraCapture::doCapture()
 		return;
 	}
 	printf("doCapture sucess!\n");
+	mPushRtmp->pushRtmp(cvmatToAvframe(&frame));
 }
 
 /*****************************************************************
