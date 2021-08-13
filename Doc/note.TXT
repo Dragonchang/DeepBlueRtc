@@ -18,4 +18,17 @@ v4l2-ctl -d /dev/video0 --list-formats-ext
 Ai615181310
 
 
-ffmpeg  -re -i "./test.flv" -vcodec copy -acodec copy -f flv -y rtmp://localhost/live/livestream/2
+ffmpeg  -re -i "./test.flv" -vcodec copy -acodec copy -f flv -y rtmp://localhost/live/livestream
+
+rtmp://192.168.41.90:1935/live/livestream
+
+
+./configure   --enable-shared  --enable-gpl --enable-libx264
+
+mkdir build
+cd build
+cmake -D CMAKE_BUILD_TYPE=Release -D WITH_GSTREAMER=ON -D WITH_FFMPEG=ON -D FFMPEG_DIR=/usr/local/bin/ffmpeg ..
+make make install
+cp -r /usr/local/include/opencv4/opencv2 /usr/local/include/
+cd etc/ld.so.conf.d/
+

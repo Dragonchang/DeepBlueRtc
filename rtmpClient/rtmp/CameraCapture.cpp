@@ -12,11 +12,11 @@ CameraCapture::CameraCapture()
 	mCaptureHandler = new CameraCaptureHandler(mCapturethread->getLooper(), this);
 	mHasOpenCamera = false;
 	mCameraDeviceIndex = 1;
-	mCaptureWidth = 640;
-	mCaptureHeight = 480;
-	mDisplayWidth = 640;
-	mDisplayHeight = 480;
-	mFramerate = 30;
+	mCaptureWidth = 346;
+	mCaptureHeight = 260;
+	mDisplayWidth = 346;
+	mDisplayHeight = 260;
+	mFramerate = 25;
 	mFlipMethod = 0;
 	mPushRtmp = new PushRtmp(mDisplayWidth, mDisplayHeight, mFramerate, mCameraDeviceIndex);
 }
@@ -77,13 +77,22 @@ bool CameraCapture::openCamera()
 		else 
 		{
 			printf("openCamera index 1\n");
-			mVideoCapture = new VideoCapture(1);
+			mVideoCapture = new VideoCapture("/home/deepblue/zfl/test.flv");
+			printf("openCamera index 111111111111\n");
+			/*
+			mVideoCapture->open("/home/deepblue/zfl/test.flv");
+			printf("openCamera index 2222\n");
 			mVideoCapture->set(cv::CAP_PROP_FRAME_WIDTH, mCaptureWidth);
+			printf("openCamera index 3333\n");
 			mVideoCapture->set(cv::CAP_PROP_FRAME_HEIGHT, mCaptureHeight);
+			printf("openCamera index 444\n");
 			mVideoCapture->set(cv::CAP_PROP_FPS, mFramerate);
+			printf("openCamera index 55555\n");
+			*/
 		}
 		if (isCameraOpen())
 		{
+			printf("openCamera index 666666666\n");
 			mHasOpenCamera = true;
 			int inWidth = mVideoCapture->get(cv::CAP_PROP_FRAME_WIDTH);
 			int inHeight = mVideoCapture->get(cv::CAP_PROP_FRAME_HEIGHT);
@@ -93,6 +102,7 @@ bool CameraCapture::openCamera()
 			return true;
 		}
 		else {
+			printf("openCamera index 777777777777777777\n");
 			mHasOpenCamera = false;
 			delete mVideoCapture;
 			mVideoCapture = NULL;
@@ -132,10 +142,13 @@ bool CameraCapture::isCISCamera()
 *****************************************************************/
 bool CameraCapture::isCameraOpen()
 {
+	printf("isCameraOpen index 11111111\n");
 	if (mVideoCapture != NULL && mVideoCapture->isOpened())
 	{
+		printf("isCameraOpen index 222222222\n");
 		return true;
 	}
+	printf("isCameraOpen index 33333333\n");
 	return false;
 }
 
