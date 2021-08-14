@@ -68,14 +68,12 @@ bool PushRtmp::initRtmp()
 	m_vpts = 0;
 	//初始化编码上下文
 	//找到编码器
-	printf("initRtmp111111111111111111111\n");
 	AVCodec *codec = avcodec_find_encoder(AV_CODEC_ID_H264);
 	if (!codec)
 	{
 		printf("canot find h264 encoder!\n");
 		return false;
 	}
-	printf("initRtmp222222222222222222222\n");
 	//b 创建编码器上下文
 	m_vc = avcodec_alloc_context3(codec);
 	if (!m_vc)
@@ -110,7 +108,6 @@ bool PushRtmp::initRtmp()
 	m_vc->qmin = 10;
 	m_vc->qmax = 30;
 	m_vc->pix_fmt = AV_PIX_FMT_YUV420P;
-	printf("initRtmp33333333333333333333333333\n");
 	//d 打开编码器上下文
 	ret = avcodec_open2(m_vc, codec, &param);
 	if (ret != 0)
@@ -118,7 +115,6 @@ bool PushRtmp::initRtmp()
 		printf("avcodec_open2 failed!\n");
 		return false;
 	}
-	printf("initRtmp4444444444444444444\n");
 	//如果是输入文件 flv可以不传，可以从文件中判断。如果是流则必须传
 	//创建输出上下文
 	ret = avformat_alloc_output_context2(&m_octx, NULL, "flv", mOutUrl.c_str());
@@ -128,7 +124,6 @@ bool PushRtmp::initRtmp()
 		return false;
 	}
 	printf("avformat_alloc_output_context2 success!\n");
-	printf("initRtmp5555555555555555555555555\n");
 	//为输出上下文添加音视频流（初始化一个音视频流容器）
 	m_out_stream = avformat_new_stream(m_octx, codec);
 	if (!m_out_stream)
@@ -140,10 +135,8 @@ bool PushRtmp::initRtmp()
 	m_out_stream->time_base.num = 1;
 	m_out_stream->time_base.den = m_fps;
 	m_out_stream->codec = m_vc;
-	printf("initRtmp66666666666666666666666\n");
 
 	av_dump_format(m_octx, 0, mOutUrl.c_str(), 1);
-	printf("initRtmp77777777777777777777\n");
 	//打开IO
 	ret = avio_open(&m_octx->pb, mOutUrl.c_str(), AVIO_FLAG_WRITE);
 	if (ret < 0)
@@ -152,7 +145,6 @@ bool PushRtmp::initRtmp()
 		return false;
 	}
 	printf("avio_open success\n");
-	printf("initRtmp888888888888888888888888\n");
 	//写入头部信息
 	ret = avformat_write_header(m_octx, 0);
 	if (ret < 0)
@@ -161,11 +153,23 @@ bool PushRtmp::initRtmp()
 		return false;
 	}
 	m_rtmpStatus = true;
-	printf("local avformat_write_header success\n");
 	return true;
-
 }
 
+/*****************************************************************
+*
+* function：releaseAVFrame
+* 作用：releaseAVFrame
+*
+*****************************************************************/
+void PushRtmp::releaseAVFrame(AVFrame *avframe)
+{
+	if (avframe != NULL)
+	{
+		av_frame_free(&avframe);
+		avframe = NULL;
+	}
+}
 /*****************************************************************
 *
 * function：PushRtmpHandler
@@ -185,90 +189,89 @@ PushRtmpHandler::PushRtmpHandler(Looper* looper, PushRtmp *pushRtmp) :Handler(lo
 *****************************************************************/
 void PushRtmpHandler::handlerMessage(Message *message)
 {
-	printf("begin pushRtmp*********************%d\n", mPushRtmp->getFrameCount());
 	AVFrame *frame = (AVFrame *)message->mObj;
-	if (frame == nullptr)
+	do
 	{
-		printf("frame is null\n");
-		return;
-	}
-	printf("restart pushrtmp1111111111111111111111\n");
-	if (!mPushRtmp->getRtmpStatus())
-	{
-		printf("restart pushrtmp\n");
-		//m_framecnt = 0;
-		if (!mPushRtmp->initRtmp())
+		printf("begin pushRtmp*********************%d\n", mPushRtmp->getFrameCount());
+		if (frame == nullptr)
 		{
-			printf("restart pushrtmp failed\n");
-			delete frame;
+			printf("frame is null\n");
 			return;
 		}
-	}
-	printf("restart pushrtmp*********************\n");
-	int ret = 0;
-	timeval startTime;
-	timeval endTime;
-	AVPacket pack;
-	gettimeofday(&startTime, nullptr);
-	memset(&pack, 0, sizeof(pack));
-	ret = avcodec_send_frame(mPushRtmp->getAVCodecContext(), frame);
-	if (ret != 0)
-	{
-		printf("avcodec_send_frame error\n");
-		delete frame;
-		return;
-	}
-
-	ret = avcodec_receive_packet(mPushRtmp->getAVCodecContext(), &pack);
-	if (ret != 0 || pack.size > 0)
-	{
-		printf("avcodec_receive_packet: %d\n", pack.size);
-	}
-	else
-	{
-		printf("avcodec_receive_packet error\n");
-		delete frame;
-		return;
-	}
-	pack.stream_index = mPushRtmp->getOutstream()->index;
-	AVRational time_base = mPushRtmp->getOutstream()->time_base;//{ 1, 1000 };
-	AVRational r_framerate1 = mPushRtmp->getAVCodecContext()->framerate;
-	AVRational time_base_q;
-	time_base_q.num = 1;
-	time_base_q.den = AV_TIME_BASE;
-	int vpts = mPushRtmp->getVpts();
-	mPushRtmp->setVptes(++vpts);
-	int64_t calc_duration = (double)(AV_TIME_BASE)*(1 / av_q2d(r_framerate1));	//内部时间戳
-	pack.pts = av_rescale_q(mPushRtmp->getVpts()*calc_duration, time_base_q, time_base);
-	pack.dts = pack.pts;
-	pack.duration = av_rescale_q(calc_duration, time_base_q, time_base);
-	pack.pos = -1;
-
-	printf("pts:%d,dts:%d,duration:%d\n", pack.pts, pack.dts, pack.duration);
-
-	if (av_interleaved_write_frame(mPushRtmp->getAVFormatContext(), &pack) < 0) //写入图像到视频
-	{
-		int failedTimes = mPushRtmp->getRtmpPushFailedTimes();
-		printf("av_interleaved_write_frame local failed failedTimes%d\n", failedTimes);
-		if (failedTimes < 5 * mPushRtmp->getFps())
+		printf("restart pushrtmp1111111111111111111111\n");
+		if (!mPushRtmp->getRtmpStatus())
 		{
-			delete frame;
+			printf("restart pushrtmp\n");
+			if (!mPushRtmp->initRtmp())
+			{
+				printf("restart pushrtmp failed\n");
+				return;
+			}
+		}
+		printf("restart pushrtmp*********************\n");
+		int ret = 0;
+		timeval startTime;
+		timeval endTime;
+		AVPacket pack;
+		gettimeofday(&startTime, nullptr);
+		memset(&pack, 0, sizeof(pack));
+		ret = avcodec_send_frame(mPushRtmp->getAVCodecContext(), frame);
+		if (ret != 0)
+		{
+			printf("avcodec_send_frame error\n");
 			return;
+		}
+
+		ret = avcodec_receive_packet(mPushRtmp->getAVCodecContext(), &pack);
+		if (ret != 0 || pack.size > 0)
+		{
+			printf("avcodec_receive_packet: %d\n", pack.size);
 		}
 		else
 		{
-			mPushRtmp->setRtmpPushFailedTimes(0);
-			avio_close(mPushRtmp->getAVFormatContext()->pb);
-			AVCodecContext *m_vc = mPushRtmp->getAVCodecContext();
-			if (m_vc != NULL) {
-				avcodec_free_context(&m_vc);
-			}
-			mPushRtmp->setRtmpStatus(false);
+			printf("avcodec_receive_packet error\n");
+			return;
 		}
-	}
-	mPushRtmp->reduceFrameCount();
-	delete frame;
-	printf("end pushRtmp*********************%d\n", mPushRtmp->getFrameCount());
+		pack.stream_index = mPushRtmp->getOutstream()->index;
+		AVRational time_base = mPushRtmp->getOutstream()->time_base;//{ 1, 1000 };
+		AVRational r_framerate1 = mPushRtmp->getAVCodecContext()->framerate;
+		AVRational time_base_q;
+		time_base_q.num = 1;
+		time_base_q.den = AV_TIME_BASE;
+		int vpts = mPushRtmp->getVpts();
+		mPushRtmp->setVptes(++vpts);
+		int64_t calc_duration = (double)(AV_TIME_BASE)*(1 / av_q2d(r_framerate1));	//内部时间戳
+		pack.pts = av_rescale_q(mPushRtmp->getVpts()*calc_duration, time_base_q, time_base);
+		pack.dts = pack.pts;
+		pack.duration = av_rescale_q(calc_duration, time_base_q, time_base);
+		pack.pos = -1;
+
+		printf("pts:%d,dts:%d,duration:%d\n", pack.pts, pack.dts, pack.duration);
+
+		if (av_interleaved_write_frame(mPushRtmp->getAVFormatContext(), &pack) < 0) //写入图像到视频
+		{
+			int failedTimes = mPushRtmp->getRtmpPushFailedTimes();
+			printf("av_interleaved_write_frame local failed failedTimes%d\n", failedTimes);
+			if (failedTimes < 5 * mPushRtmp->getFps())
+			{
+				return;
+			}
+			else
+			{
+				mPushRtmp->setRtmpPushFailedTimes(0);
+				avio_close(mPushRtmp->getAVFormatContext()->pb);
+				AVCodecContext *m_vc = mPushRtmp->getAVCodecContext();
+				if (m_vc != NULL) {
+					avcodec_free_context(&m_vc);
+				}
+				mPushRtmp->setRtmpStatus(false);
+			}
+		}
+		mPushRtmp->reduceFrameCount();
+		printf("end pushRtmp*********************%d\n", mPushRtmp->getFrameCount());
+	} while (0);
+	mPushRtmp->releaseAVFrame(frame);
+
 
 }
 

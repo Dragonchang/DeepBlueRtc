@@ -47,7 +47,7 @@ public:
 	AVFormatContext * getAVFormatContext() { return m_octx; }
 	AVCodecContext *getAVCodecContext() { return m_vc; }
 	bool initRtmp();
-
+	void releaseAVFrame(AVFrame *avframe);
 private:
 	//srs推流地址
 	string mOutUrl;

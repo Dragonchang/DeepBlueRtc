@@ -12,10 +12,10 @@ CameraCapture::CameraCapture()
 	mCaptureHandler = new CameraCaptureHandler(mCapturethread->getLooper(), this);
 	mHasOpenCamera = false;
 	mCameraDeviceIndex = 1;
-	mCaptureWidth = 346;
-	mCaptureHeight = 260;
-	mDisplayWidth = 346;
-	mDisplayHeight = 260;
+	mCaptureWidth = 848;
+	mCaptureHeight = 480;
+	mDisplayWidth = 848;
+	mDisplayHeight = 480;
 	mFramerate = 25;
 	mFlipMethod = 0;
 	mPushRtmp = new PushRtmp(mDisplayWidth, mDisplayHeight, mFramerate, mCameraDeviceIndex);
@@ -47,13 +47,11 @@ CameraCapture::~CameraCapture()
 *****************************************************************/
 void CameraCapture::startCameraCapture()
 {
-	printf("openCamera begin!*************************\n");
 	bool isSuccess = openCamera();
 	if (!isSuccess)
 	{
 		printf("openCamera failed!");
 	}
-	printf("openCamera end!*************************\n");
 	Message* message = Message::obtain(CameraCaptureHandler::CAPTURE_MESSAGE);
 	mCaptureHandler->sendMessage(message);
 }
@@ -77,10 +75,9 @@ bool CameraCapture::openCamera()
 		else 
 		{
 			printf("openCamera index 1\n");
-			mVideoCapture = new VideoCapture("/home/deepblue/zfl/test.flv");
-			printf("openCamera index 111111111111\n");
+			mVideoCapture = new VideoCapture("/home/deepblue/zfl/test3.mp4");
 			/*
-			mVideoCapture->open("/home/deepblue/zfl/test.flv");
+			mVideoCapture = new VideoCapture(mCameraDeviceIndex);
 			printf("openCamera index 2222\n");
 			mVideoCapture->set(cv::CAP_PROP_FRAME_WIDTH, mCaptureWidth);
 			printf("openCamera index 3333\n");
@@ -92,7 +89,6 @@ bool CameraCapture::openCamera()
 		}
 		if (isCameraOpen())
 		{
-			printf("openCamera index 666666666\n");
 			mHasOpenCamera = true;
 			int inWidth = mVideoCapture->get(cv::CAP_PROP_FRAME_WIDTH);
 			int inHeight = mVideoCapture->get(cv::CAP_PROP_FRAME_HEIGHT);
@@ -105,28 +101,24 @@ bool CameraCapture::openCamera()
 				mDisplayWidth, mDisplayHeight, AV_PIX_FMT_YUV420P,//目标   宽、高、像素格式
 				SWS_BICUBIC,  //尺寸变化使用算法
 				0, 0, 0);
-			if (!m_Vsc) {
-				printf("openCamera index 8888888888888\n");
+			if (m_Vsc == NULL) {
+				printf("初始化格式转换上下文失败\n");
+				mHasOpenCamera = false;
+				releaseCamera();
 				return false;
 			}
 			m_vpts = 0;
 			return true;
 		}
 		else {
-			printf("openCamera index 777777777777777777\n");
+			printf("openCamera failed\n");
 			mHasOpenCamera = false;
-			delete mVideoCapture;
-			mVideoCapture = NULL;
+			releaseCamera();
 		}
 	}
 	catch (exception &ex)
 	{
-		if (mVideoCapture->isOpened()) {
-			mVideoCapture->release();
-			delete mVideoCapture;
-			mVideoCapture = NULL;
-		}
-			
+		releaseCamera();	
 	}
 	return false;
 }
@@ -153,16 +145,49 @@ bool CameraCapture::isCISCamera()
 *****************************************************************/
 bool CameraCapture::isCameraOpen()
 {
-	printf("isCameraOpen index 11111111\n");
 	if (mVideoCapture != NULL && mVideoCapture->isOpened())
 	{
-		printf("isCameraOpen index 222222222\n");
 		return true;
 	}
-	printf("isCameraOpen index 33333333\n");
 	return false;
 }
 
+/*****************************************************************
+* name:releaseCamera
+* function:释放资源
+*
+*****************************************************************/
+void CameraCapture::releaseCamera()
+{
+	if (mVideoCapture != NULL)
+	{
+		if (mVideoCapture->isOpened()) {
+			mVideoCapture->release();
+		}
+		delete mVideoCapture;
+		mVideoCapture = NULL;
+	}
+	if (m_Vsc != NULL)
+	{
+		sws_freeContext(m_Vsc);
+		delete m_Vsc;
+		m_Vsc = NULL;
+	}
+	
+}
+/*****************************************************************
+* name:releaseAVFrame
+* function:releaseAVFrame
+*
+*****************************************************************/
+void CameraCapture::releaseAVFrame(AVFrame *avframe)
+{
+	if (avframe != NULL)
+	{
+		av_frame_free(&avframe);
+		avframe = NULL;
+	}
+}
 /*****************************************************************
 * name:cvmatToAvframe
 * function:Mat 转 AVFrame 
@@ -170,44 +195,50 @@ bool CameraCapture::isCameraOpen()
 *****************************************************************/
 AVFrame* CameraCapture::cvmatToAvframe(Mat* image)
 {
-	AVFrame *avframe = av_frame_alloc();
-	if ( avframe!= NULL && !image->empty()) {
-		int width = image->cols;
-		int height = image->rows;
-		printf("cvmatToAvframe inWidth: %d, height: %d\n", width, height);
-		avframe->format = AV_PIX_FMT_YUV420P;
-		avframe->width = width;
-		avframe->height = height;
-		//h264编码
-		avframe->pts = m_vpts;
-		m_vpts++;
-		int ret = av_frame_get_buffer(avframe, 32);
-		if (ret != 0) {
-			char buf[1024] = { 0 };
-			av_strerror(ret, buf, sizeof(buf) - 1);
-			printf("cvmatToAvframe error buf: %s\n", buf);
-			return NULL;
-		}
+	if (image != NULL && !image->empty())
+	{
+		AVFrame *avframe = av_frame_alloc();
+		if (avframe != NULL) 
+		{
+			int width = image->cols;
+			int height = image->rows;
+			printf("cvmatToAvframe inWidth: %d, height: %d\n", width, height);
+			avframe->format = AV_PIX_FMT_YUV420P;
+			avframe->width = width;
+			avframe->height = height;
+			//h264编码
+			avframe->pts = m_vpts;
+			m_vpts++;
+			int ret = av_frame_get_buffer(avframe, 32);
+			if (ret != 0) {
+				char buf[1024] = { 0 };
+				av_strerror(ret, buf, sizeof(buf) - 1);
+				printf("cvmatToAvframe error buf: %s\n", buf);
+				releaseAVFrame(avframe);
+				return NULL;
+			}
 
-		///rgb to yuv
-		//输入的数据结构
-		uint8_t *indata[AV_NUM_DATA_POINTERS] = { 0 };
-		indata[0] = image->data;
-		int insize[AV_NUM_DATA_POINTERS] = { 0 };
-		insize[0] = image->cols * image->elemSize();//一行（宽）数据的字节数
-		int h = sws_scale(m_Vsc, indata, insize, 0, image->rows, //源数据
-			avframe->data, avframe->linesize);
-		if (h <= 0) {
-			printf("cvmatToAvframe error (h <= 0\n");
+			///rgb to yuv
+			//输入的数据结构
+			uint8_t *indata[AV_NUM_DATA_POINTERS] = { 0 };
+			indata[0] = image->data;
+			int insize[AV_NUM_DATA_POINTERS] = { 0 };
+			insize[0] = image->cols * image->elemSize();//一行（宽）数据的字节数
+			int h = sws_scale(m_Vsc, indata, insize, 0, image->rows, //源数据
+				avframe->data, avframe->linesize);
+			if (h <= 0) {
+				printf("cvmatToAvframe error (h <= 0\n");
+				releaseAVFrame(avframe);
+				return NULL;
+			}
+		}
+		else {
+			printf("av_frame_alloc failed\n");
 			return NULL;
 		}
-	}
-	else {
-		printf("cvmatToAvframe NULL\n");
-		return NULL;
-	}
-	printf("cvmatToAvframe success\n");
-	return avframe;
+		return avframe;
+	} 
+
 }
 
 /*****************************************************************
@@ -225,7 +256,7 @@ void CameraCapture::doCapture()
 		{
 			printf("openCamera failed!\n");
 			//sleep for reduce CPU time 
-			sleep(1);
+			sleep(2);
 			return;
 		}
 	}
@@ -240,7 +271,6 @@ void CameraCapture::doCapture()
 		printf("Decodes and returns the grabbed video frame failed\n");
 		return;
 	}
-	printf("doCapture sucess!\n");
 	mPushRtmp->pushRtmp(cvmatToAvframe(&frame));
 }
 
@@ -280,13 +310,13 @@ void CameraCaptureHandler::handlerMessage(Message *message)
 	timeval startTime;
 	timeval endTime;
 	gettimeofday(&startTime, nullptr);
-	printf("begin doCapture*********************\n");
 	mCameraCapture->doCapture();
 	gettimeofday(&endTime, nullptr);
 	long delay = getNextFrameDelay(startTime, endTime);
 	printf("doCapture end need delay: %ld\n", delay);
 	Message* newMessage = Message::obtain(CameraCaptureHandler::CAPTURE_MESSAGE);
-	if (delay >0) {
+	if (delay > 0) 
+	{
 		sendMessageDelayed(newMessage, delay);
 	}
 	else

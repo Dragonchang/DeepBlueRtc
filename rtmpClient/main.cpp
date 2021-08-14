@@ -14,7 +14,6 @@
 *********************************************************************/
 int main(int argc, char **argv) {
 
-	printf("main*************************\n");
 	Looper *mMainLooper = new Looper();
 	CameraCapture *mCameraCapture = new CameraCapture();
 	mCameraCapture->startCameraCapture();

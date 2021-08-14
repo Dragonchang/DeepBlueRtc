@@ -47,6 +47,8 @@ private:
 	bool isCISCamera();
 	bool isCameraOpen();
 	AVFrame* cvmatToAvframe(Mat* image);
+	void releaseCamera();
+	void releaseAVFrame(AVFrame *avframe);
 
 private:
 	CameraCaptureHandler *mCaptureHandler;
