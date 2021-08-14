@@ -99,6 +99,17 @@ bool CameraCapture::openCamera()
 			int fps = mVideoCapture->get(cv::CAP_PROP_FPS);
 			int nframes = mVideoCapture->get(cv::CAP_PROP_FRAME_COUNT);
 			printf("openCamera success inWidth: %d, inHeight: %d,fps:%d, nframes:%d\n", inWidth, inHeight, fps, nframes);
+			//初始化格式转换上下文
+			m_Vsc = sws_getCachedContext(m_Vsc,
+				mCaptureWidth, mCaptureHeight, AV_PIX_FMT_BGR24,  //源     宽、高、像素格式
+				mDisplayWidth, mDisplayHeight, AV_PIX_FMT_YUV420P,//目标   宽、高、像素格式
+				SWS_BICUBIC,  //尺寸变化使用算法
+				0, 0, 0);
+			if (!m_Vsc) {
+				printf("openCamera index 8888888888888\n");
+				return false;
+			}
+			m_vpts = 0;
 			return true;
 		}
 		else {
@@ -167,20 +178,35 @@ AVFrame* CameraCapture::cvmatToAvframe(Mat* image)
 		avframe->format = AV_PIX_FMT_YUV420P;
 		avframe->width = width;
 		avframe->height = height;
-		av_frame_get_buffer(avframe, 0);
-		av_frame_make_writable(avframe);
-		cv::Mat yuv; // convert to yuv420p first
-		cv::cvtColor(*image, yuv, cv::COLOR_BGR2YUV_I420);
-		// calc frame size
-		int frame_size = image->cols * image->rows;
-		unsigned char *pdata = yuv.data;
-		avframe->data[0] = pdata; // fill y
-		avframe->data[1] = pdata + frame_size; // fill u
-		avframe->data[2] = pdata + frame_size * 5 / 4; // fill v
+		//h264编码
+		avframe->pts = m_vpts;
+		m_vpts++;
+		int ret = av_frame_get_buffer(avframe, 32);
+		if (ret != 0) {
+			char buf[1024] = { 0 };
+			av_strerror(ret, buf, sizeof(buf) - 1);
+			printf("cvmatToAvframe error buf: %s\n", buf);
+			return NULL;
+		}
+
+		///rgb to yuv
+		//输入的数据结构
+		uint8_t *indata[AV_NUM_DATA_POINTERS] = { 0 };
+		indata[0] = image->data;
+		int insize[AV_NUM_DATA_POINTERS] = { 0 };
+		insize[0] = image->cols * image->elemSize();//一行（宽）数据的字节数
+		int h = sws_scale(m_Vsc, indata, insize, 0, image->rows, //源数据
+			avframe->data, avframe->linesize);
+		if (h <= 0) {
+			printf("cvmatToAvframe error (h <= 0\n");
+			return NULL;
+		}
 	}
 	else {
+		printf("cvmatToAvframe NULL\n");
 		return NULL;
 	}
+	printf("cvmatToAvframe success\n");
 	return avframe;
 }
 

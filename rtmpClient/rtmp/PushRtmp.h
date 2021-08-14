@@ -35,6 +35,10 @@ public:
 	int getFps() { return m_fps; }
 	int getFrameCount(){ return m_framecnt;}
 	void reduceFrameCount() { --m_framecnt;}
+
+	int getVpts() { return m_vpts; }
+	void setVptes(int vpts) { m_vpts = vpts; }
+
 	int getRtmpPushFailedTimes() { return ++m_localRtmpFailedTimes;}
 	void setRtmpPushFailedTimes(int times) { m_localRtmpFailedTimes = times; }
 	bool getRtmpStatus() { return m_rtmpStatus;}
@@ -56,6 +60,7 @@ private:
 
 	int m_framecnt;
 	int m_localRtmpFailedTimes;
+	int m_vpts;
 
 	AVStream *m_out_stream;
 	AVFormatContext * m_octx;

@@ -65,6 +65,7 @@ bool PushRtmp::initRtmp()
 {
 	int ret = 0;
 	m_rtmpStatus = false;
+	m_vpts = 0;
 	//初始化编码上下文
 	//找到编码器
 	printf("initRtmp111111111111111111111\n");
@@ -235,9 +236,10 @@ void PushRtmpHandler::handlerMessage(Message *message)
 	AVRational time_base_q;
 	time_base_q.num = 1;
 	time_base_q.den = AV_TIME_BASE;
-
+	int vpts = mPushRtmp->getVpts();
+	mPushRtmp->setVptes(++vpts);
 	int64_t calc_duration = (double)(AV_TIME_BASE)*(1 / av_q2d(r_framerate1));	//内部时间戳
-	pack.pts = av_rescale_q(mPushRtmp->getFrameCount()*calc_duration, time_base_q, time_base);
+	pack.pts = av_rescale_q(mPushRtmp->getVpts()*calc_duration, time_base_q, time_base);
 	pack.dts = pack.pts;
 	pack.duration = av_rescale_q(calc_duration, time_base_q, time_base);
 	pack.pos = -1;

@@ -53,6 +53,7 @@ private:
 	NThread *mCapturethread;
 
 	VideoCapture *mVideoCapture;
+	SwsContext *m_Vsc;
 
 	//是否打开摄像头
 	bool mHasOpenCamera;
@@ -64,7 +65,7 @@ private:
 	int mDisplayHeight;
 	int mFramerate;
 	int mFlipMethod;
-
+	int m_vpts;
 	//默认使用/dev/video1 usb
 	int mCameraDeviceIndex;
 
