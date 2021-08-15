@@ -113,6 +113,7 @@ bool PushRtmp::initRtmp()
 	if (ret != 0)
 	{
 		printf("avcodec_open2 failed!\n");
+		avcodec_free_context(&m_vc);
 		return false;
 	}
 	//如果是输入文件 flv可以不传，可以从文件中判断。如果是流则必须传
@@ -121,6 +122,7 @@ bool PushRtmp::initRtmp()
 	if (ret < 0)
 	{
 		printf("avformat_alloc_output_context2 failed,ret=%d\n", ret);
+		avcodec_free_context(&m_vc);
 		return false;
 	}
 	printf("avformat_alloc_output_context2 success!\n");
@@ -129,6 +131,8 @@ bool PushRtmp::initRtmp()
 	if (!m_out_stream)
 	{
 		printf("未能成功添加音视频流\n");
+		avcodec_free_context(&m_vc);
+		avformat_close_input(&m_octx);
 		//ret = AVERROR_UNKNOWN;
 		return false;
 	}
@@ -142,6 +146,8 @@ bool PushRtmp::initRtmp()
 	if (ret < 0)
 	{
 		printf("avio_open failed:%d\n", ret);
+		avcodec_free_context(&m_vc);
+		avformat_close_input(&m_octx);
 		return false;
 	}
 	printf("avio_open success\n");
@@ -150,6 +156,8 @@ bool PushRtmp::initRtmp()
 	if (ret < 0)
 	{
 		printf("avformat_write_header failed:%d\n", ret);
+		avcodec_free_context(&m_vc);
+		avformat_close_input(&m_octx);
 		return false;
 	}
 	m_rtmpStatus = true;
@@ -192,13 +200,11 @@ void PushRtmpHandler::handlerMessage(Message *message)
 	AVFrame *frame = (AVFrame *)message->mObj;
 	do
 	{
-		printf("begin pushRtmp*********************%d\n", mPushRtmp->getFrameCount());
-		if (frame == nullptr)
+		if (frame == NULL)
 		{
 			printf("frame is null\n");
 			return;
 		}
-		printf("restart pushrtmp1111111111111111111111\n");
 		if (!mPushRtmp->getRtmpStatus())
 		{
 			printf("restart pushrtmp\n");
@@ -208,7 +214,6 @@ void PushRtmpHandler::handlerMessage(Message *message)
 				return;
 			}
 		}
-		printf("restart pushrtmp*********************\n");
 		int ret = 0;
 		timeval startTime;
 		timeval endTime;
@@ -268,8 +273,9 @@ void PushRtmpHandler::handlerMessage(Message *message)
 			}
 		}
 		mPushRtmp->reduceFrameCount();
-		printf("end pushRtmp*********************%d\n", mPushRtmp->getFrameCount());
+		printf("end pushRtmp now still has %d frame.\n", mPushRtmp->getFrameCount());
 	} while (0);
+	//释放AVFrame
 	mPushRtmp->releaseAVFrame(frame);
 
 

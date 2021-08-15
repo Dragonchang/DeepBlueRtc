@@ -1,8 +1,6 @@
 #ifndef H_CAMERA_CAPTURE
 #define H_CAMERA_CAPTURE
-#include <unistd.h>
-#include <iostream>
-#include <sys/time.h>
+#include  "../base/BaseHeader.h"
 
 #include "../handlerThread/Handler.h"
 #include "../handlerThread/Message.h"
@@ -43,7 +41,7 @@ public:
 
 private:
 	string gstreamerPipeline();
-	bool openCamera();
+	int openCamera();
 	bool isCISCamera();
 	bool isCameraOpen();
 	AVFrame* cvmatToAvframe(Mat* image);
@@ -56,9 +54,6 @@ private:
 
 	VideoCapture *mVideoCapture;
 	SwsContext *m_Vsc;
-
-	//是否打开摄像头
-	bool mHasOpenCamera;
 
 	//打开摄像参数
 	int mCaptureWidth;

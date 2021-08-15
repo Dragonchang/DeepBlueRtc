@@ -4,8 +4,7 @@
 #include "./handlerThread/Condition.h"
 #include "./handlerThread/Meutex.h"
 #include "./rtmp/CameraCapture.h"
-#include <sys/time.h>
-#include <unistd.h>
+#include "./base/BaseHeader.h"
 
 /*******************************************************************
 *

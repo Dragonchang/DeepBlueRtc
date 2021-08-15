@@ -10,15 +10,14 @@ CameraCapture::CameraCapture()
 {
 	mCapturethread = new NThread();
 	mCaptureHandler = new CameraCaptureHandler(mCapturethread->getLooper(), this);
-	mHasOpenCamera = false;
 	mCameraDeviceIndex = 1;
 	mCaptureWidth = 848;
 	mCaptureHeight = 480;
 	mDisplayWidth = 848;
 	mDisplayHeight = 480;
-	mFramerate = 25;
+	mFramerate = 26;
 	mFlipMethod = 0;
-	mPushRtmp = new PushRtmp(mDisplayWidth, mDisplayHeight, mFramerate, mCameraDeviceIndex);
+	mPushRtmp = new PushRtmp(mDisplayWidth, mDisplayHeight, mFramerate -1, mCameraDeviceIndex);
 }
 
 /*****************************************************************
@@ -47,8 +46,8 @@ CameraCapture::~CameraCapture()
 *****************************************************************/
 void CameraCapture::startCameraCapture()
 {
-	bool isSuccess = openCamera();
-	if (!isSuccess)
+	int isSuccess = openCamera();
+	if (isSuccess == FAILURE)
 	{
 		printf("openCamera failed!");
 	}
@@ -62,7 +61,7 @@ void CameraCapture::startCameraCapture()
 * 作用：
 *
 *****************************************************************/
-bool CameraCapture::openCamera()
+int CameraCapture::openCamera()
 {
 	try
 	{
@@ -89,7 +88,6 @@ bool CameraCapture::openCamera()
 		}
 		if (isCameraOpen())
 		{
-			mHasOpenCamera = true;
 			int inWidth = mVideoCapture->get(cv::CAP_PROP_FRAME_WIDTH);
 			int inHeight = mVideoCapture->get(cv::CAP_PROP_FRAME_HEIGHT);
 			int fps = mVideoCapture->get(cv::CAP_PROP_FPS);
@@ -103,16 +101,14 @@ bool CameraCapture::openCamera()
 				0, 0, 0);
 			if (m_Vsc == NULL) {
 				printf("初始化格式转换上下文失败\n");
-				mHasOpenCamera = false;
 				releaseCamera();
 				return false;
 			}
 			m_vpts = 0;
-			return true;
+			return SUCCESS;
 		}
 		else {
 			printf("openCamera failed\n");
-			mHasOpenCamera = false;
 			releaseCamera();
 		}
 	}
@@ -120,7 +116,7 @@ bool CameraCapture::openCamera()
 	{
 		releaseCamera();	
 	}
-	return false;
+	return FAILURE;
 }
 
 /*****************************************************************
@@ -251,8 +247,8 @@ void CameraCapture::doCapture()
 	if (!isCameraOpen())
 	{
 		printf("doCapture with close camera\n");
-		bool isSuccess = openCamera();
-		if (!isSuccess)
+		int isSuccess = openCamera();
+		if (isSuccess == FAILURE)
 		{
 			printf("openCamera failed!\n");
 			//sleep for reduce CPU time 
