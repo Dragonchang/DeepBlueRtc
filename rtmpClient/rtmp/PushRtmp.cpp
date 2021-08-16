@@ -12,7 +12,7 @@ PushRtmp::PushRtmp(int width, int height, int fps, int cameraDeviceIndex)
 	m_height = height;
 	m_fps = fps;
 	mOutUrl = "rtmp://127.0.0.1/live/livestream";
-
+	
 	//注册所有的编解码器
 	avcodec_register_all();
 
@@ -122,7 +122,7 @@ bool PushRtmp::initRtmp()
 	if (ret < 0)
 	{
 		printf("avformat_alloc_output_context2 failed,ret=%d\n", ret);
-		avcodec_free_context(&m_vc);
+		//avcodec_free_context(&m_vc);
 		return false;
 	}
 	printf("avformat_alloc_output_context2 success!\n");
@@ -131,8 +131,8 @@ bool PushRtmp::initRtmp()
 	if (!m_out_stream)
 	{
 		printf("未能成功添加音视频流\n");
-		avcodec_free_context(&m_vc);
-		avformat_close_input(&m_octx);
+		//avcodec_free_context(&m_vc);
+		//avformat_close_input(&m_octx);
 		//ret = AVERROR_UNKNOWN;
 		return false;
 	}
@@ -146,8 +146,8 @@ bool PushRtmp::initRtmp()
 	if (ret < 0)
 	{
 		printf("avio_open failed:%d\n", ret);
-		avcodec_free_context(&m_vc);
-		avformat_close_input(&m_octx);
+		//avcodec_free_context(&m_vc);
+		//avformat_close_input(&m_octx);
 		return false;
 	}
 	printf("avio_open success\n");
@@ -156,8 +156,8 @@ bool PushRtmp::initRtmp()
 	if (ret < 0)
 	{
 		printf("avformat_write_header failed:%d\n", ret);
-		avcodec_free_context(&m_vc);
-		avformat_close_input(&m_octx);
+		//avcodec_free_context(&m_vc);
+		//avformat_close_input(&m_octx);
 		return false;
 	}
 	m_rtmpStatus = true;

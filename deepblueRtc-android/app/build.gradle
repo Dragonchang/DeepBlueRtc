@@ -11,15 +11,22 @@ apply plugin: 'com.android.application'
 
 
 android {
-    compileSdkVersion 27
-    buildToolsVersion '27.0.3'
+    compileSdkVersion 29
+    buildToolsVersion "29.0.2"
 
     defaultConfig {
         applicationId "com.deepblue.rtc"
-        minSdkVersion 16
-        targetSdkVersion 27
-        versionCode 0
+        minSdkVersion 26
+        targetSdkVersion 29
+        versionCode 1
         versionName '1.0'
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [
+                        "androidManifestFile": "$projectDir/src/main/AndroidManifest.xml".toString()
+                ]
+            }
+        }
     }
     buildTypes {
         release {

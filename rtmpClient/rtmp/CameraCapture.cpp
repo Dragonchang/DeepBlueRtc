@@ -11,13 +11,20 @@ CameraCapture::CameraCapture()
 	mCapturethread = new NThread();
 	mCaptureHandler = new CameraCaptureHandler(mCapturethread->getLooper(), this);
 	mCameraDeviceIndex = 1;
+	/*
 	mCaptureWidth = 848;
 	mCaptureHeight = 480;
 	mDisplayWidth = 848;
 	mDisplayHeight = 480;
 	mFramerate = 26;
+	*/
+	mCaptureWidth = 640;
+	mCaptureHeight = 480;
+	mDisplayWidth = 640;
+	mDisplayHeight = 480;
+	mFramerate = 30;
 	mFlipMethod = 0;
-	mPushRtmp = new PushRtmp(mDisplayWidth, mDisplayHeight, mFramerate -1, mCameraDeviceIndex);
+	mPushRtmp = new PushRtmp(mDisplayWidth, mDisplayHeight, mFramerate, mCameraDeviceIndex);
 }
 
 /*****************************************************************
@@ -74,17 +81,12 @@ int CameraCapture::openCamera()
 		else 
 		{
 			printf("openCamera index 1\n");
-			mVideoCapture = new VideoCapture("/home/deepblue/zfl/test3.mp4");
-			/*
+			//mVideoCapture = new VideoCapture("/home/deepblue/zfl/test3.mp4");
+			
 			mVideoCapture = new VideoCapture(mCameraDeviceIndex);
-			printf("openCamera index 2222\n");
 			mVideoCapture->set(cv::CAP_PROP_FRAME_WIDTH, mCaptureWidth);
-			printf("openCamera index 3333\n");
 			mVideoCapture->set(cv::CAP_PROP_FRAME_HEIGHT, mCaptureHeight);
-			printf("openCamera index 444\n");
 			mVideoCapture->set(cv::CAP_PROP_FPS, mFramerate);
-			printf("openCamera index 55555\n");
-			*/
 		}
 		if (isCameraOpen())
 		{
