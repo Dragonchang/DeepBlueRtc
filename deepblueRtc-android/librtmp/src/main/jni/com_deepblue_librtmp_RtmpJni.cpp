@@ -1,7 +1,3 @@
-//
-// Created by zhongjihao on 18-2-9.
-//
-
 #define LOG_TAG "RTMP-JNI"
 
 #include "com_deepblue_librtmp_RtmpJni.h"
@@ -49,6 +45,29 @@ failed:
     return ret;
 }
 
+JNIEXPORT jbyteArray JNICALL Java_com_deepblue_librtmp_RtmpJni_receiveVideoFrame(JNIEnv* env,jclass jcls,jlong cptr)
+{
+    RtmpReceiver *ret = 0;
+    CRtmpWrap* rtmp = reinterpret_cast<CRtmpWrap *> (cptr);
+    ret = rtmp->receivePacket();
+    ALOGD("%s: X: ====zhongjihao====receiveVideoFrame===11111=ret: %d",__FUNCTION__,ret);
+    if(ret != NULL)
+    {
+        ALOGD("%s: X: ====zhongjihao====receiveVideoFrame===222222222=ret: %d",__FUNCTION__,ret->frameSize);
+        if(ret->frame != NULL) {
+            ALOGD("%s: X: ====zhongjihao====receiveVideoFrame===333333333=ret: %d",__FUNCTION__,
+                  sizeof(ret->frame));
+            jbyteArray frame = env->NewByteArray(ret->frameSize);
+            ALOGD("%s: X: ====zhongjihao====receiveVideoFrame===444444=ret: %d",__FUNCTION__,ret->frameSize);
+            env->SetByteArrayRegion(frame, 0, ret->frameSize, reinterpret_cast<const jbyte*>(ret->frame));
+            ALOGD("%s: X: ====zhongjihao====receiveVideoFrame===55555=ret: %d",__FUNCTION__,ret->frameSize);
+            return frame;
+        } else{
+            ALOGD("%s: X: ====zhongjihao====receiveVideoFrame===666666666=ret: %d",__FUNCTION__,ret);
+        }
+    }
+    return NULL;
+}
 JNIEXPORT jint JNICALL Java_com_deepblue_librtmp_RtmpJni_sendSpsAndPps(JNIEnv* env,jclass jcls,jlong cptr,jbyteArray jsps, jint spsLen, jbyteArray jpps, jint ppsLen)
 {
     ALOGD("%s: E: =====zhongjihao=====RTMP send video h264 sps pps=====",__FUNCTION__);

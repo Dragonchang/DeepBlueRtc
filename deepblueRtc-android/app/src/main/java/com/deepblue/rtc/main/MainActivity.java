@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.deepblue.librtmp.RtmpReceiver;
 import com.deepblue.rtccall.bean.UserBean;
 import com.deepblue.rtccall.ims.DeepBlueVideoCallManger;
 import com.deepblue.rtccall.ims.ImServerMessageCallBack;
@@ -51,6 +52,8 @@ public class MainActivity extends MvpActivity<MainView, MainPresenter> implement
     @ViewById(R.id.call)
     protected Button call;
 
+    @ViewById(R.id.pullrtmp)
+    protected Button pullrtmp;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,6 +87,12 @@ public class MainActivity extends MvpActivity<MainView, MainPresenter> implement
         } else {
             Toast.makeText(this, "请输入用户名", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Click(R.id.pullrtmp)
+    protected void pullrtmpClick() {
+        RtmpReceiver.newInstance().init("rtmp://10.16.35.160/live/livestream", "/sdcard/log.text");
+
     }
 
     @NonNull

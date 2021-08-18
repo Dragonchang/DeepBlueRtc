@@ -16,6 +16,14 @@ JNIEXPORT jlong JNICALL Java_com_deepblue_librtmp_RtmpJni_initRtmp
   (JNIEnv *, jclass, jstring, jstring);
 
 /*
+ * Class:     Java_com_deepblue_librtmp_RtmpJni_receiveVideoFrame
+ * Method:    receiveVideoFrame
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)J
+ */
+JNIEXPORT jbyteArray JNICALL Java_com_deepblue_librtmp_RtmpJni_receiveVideoFrame
+        (JNIEnv *, jclass, jlong);
+
+/*
  * Class:     com_android_rtmpvideo_RtmpJni
  * Method:    sendSpsAndPps
  * Signature: (J[BI[BI)I

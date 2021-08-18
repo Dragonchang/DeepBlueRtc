@@ -5,12 +5,12 @@ import android.util.Log;
 
 public class RtmpJni {
     static {
-        Log.d("RtmpJni", "====zhongjihao====add lib RTMP  start===");
         System.loadLibrary("rtmpJni");
-        Log.d("RtmpJni", "====zhongjihao=====add lib RTMP end===");
     }
 
     public static final native long initRtmp(String url, String logpath);
+
+    public static final native byte[] receiveVideoFrame(long cptr);
 
     public static final native int sendSpsAndPps(long cptr,byte[] sps, int spsLen, byte[] pps, int ppsLen);
 

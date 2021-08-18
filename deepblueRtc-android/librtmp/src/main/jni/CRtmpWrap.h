@@ -1,17 +1,10 @@
-/*************************************************************************
-    > File Name: CRtmpWrap.h
-    > Author: zhongjihao
-    > Mail: zhongjihao100@163.com 
-    > Created Time: 2018年02月09日 星期五 10时14分30秒
- ************************************************************************/
-
 #ifndef CRTMP_WRAP_H
 #define CRTMP_WRAP_H
 
 #include "./rtmp_sys.h"
 #include "./log.h"
 #include "./rtmp.h"
-
+#include "./RtmpReceiver.h"
 //定义包头长度，RTMP_MAX_HEADER_SIZE=18
 #define RTMP_HEAD_SIZE   (sizeof(RTMPPacket) + RTMP_MAX_HEADER_SIZE)
 
@@ -43,6 +36,16 @@ public:
 	 * @成功则返回 1 , 失败则返回 0
 	*/
 	int RTMPAV_Connect(const char* url,FILE* logfile);
+
+	/**
+	 * 发送RTMP数据包
+	 * @param nPacketType 数据类型
+	 * @param data 存储数据内容
+	 * @param size 数据大小
+	 * @param nTimestamp 当前包的时间戳
+	 * @成功则返回 1 , 失败则返回 0
+	*/
+	RtmpReceiver* receivePacket();
 
 	/**
 	 * 发送H264数据帧

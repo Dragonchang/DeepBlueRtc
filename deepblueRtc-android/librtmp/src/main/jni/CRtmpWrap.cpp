@@ -1,9 +1,3 @@
-/*************************************************************************
-    > File Name: CRtmpWrap.cpp
-    > Author: zhongjihao
-    > Mail: zhongjihao100@163.com 
-    > Created Time: 2018年02月09日 星期五 16时14分30秒
- ************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,9 +36,7 @@ int CRtmpWrap::RTMPAV_Connect(const char* url,FILE* logfile)
 		return false;
 	}
 
-	/*设置可写,即发布流,这个函数必须在连接前使用,否则无效*/
-	RTMP_EnableWrite(m_pRtmp);
-
+    RTMP_SetBufferMS(m_pRtmp, 2 * 1024 * 1024); // 2MB
 	/*连接服务器*/
 	if (RTMP_Connect(m_pRtmp, NULL) == FALSE) 
 	{
@@ -63,7 +55,54 @@ int CRtmpWrap::RTMPAV_Connect(const char* url,FILE* logfile)
 	}
 	return true;
 }
+RtmpReceiver* CRtmpWrap::receivePacket()
+{
+	RTMPPacket packet = { 0 }, ps = { 0 };
+	RTMP_Log(RTMP_LOGWARNING, "receivePacket ***********begin");
+	int ret = RTMP_ReadPacket(m_pRtmp, &packet);
+	if(ret < 0)
+	{
+		RTMP_Log(RTMP_LOGWARNING, "receivePacket error");
+		return NULL;
+	}
+	if(ret == 0)
+	{
+		RTMP_Log(RTMP_LOGWARNING, "receivePacket 0");
+		return NULL;
+	}
+	RTMP_Log(RTMP_LOGWARNING, "RTMPPacket_IsReady 0");
+	if (RTMPPacket_IsReady(&packet))
+	{
+		RTMP_Log(RTMP_LOGWARNING, "RTMPPacket_IsReady 1111");
+		RTMP_ClientPacket(m_pRtmp, &packet);
+		RTMP_Log(RTMP_LOGWARNING, "RTMPPacket_IsReady 2222222222");
+		if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO) {
+			RTMP_Log(RTMP_LOGWARNING, "RTMPPacket_IsReady RTMP_PACKET_TYPE_VIDEO %d",packet.m_nBodySize);
+			bool keyframe = 0x17 == packet.m_body[0] ? true : false;
+			bool sequence = 0x00 == packet.m_body[1];
+			if(packet.m_nBodySize >0)
+			{
+			    //if(sequence) {
+                    RtmpReceiver *receiver = new RtmpReceiver();
+                    char* frame = (char *)malloc(packet.m_nBodySize);
+                    RTMP_Log(RTMP_LOGWARNING,"keyframe=%s, sequence=%s\n", keyframe ? "true" : "false", sequence ? "true" : "false");
+                    memcpy(frame, packet.m_body,packet.m_nBodySize);
+                    receiver->frame = frame;
+                    receiver->frameSize = packet.m_nBodySize;
+                    return receiver;
+			    //} else {
 
+			    //}
+
+			}
+		} else if (packet.m_packetType == RTMP_PACKET_TYPE_AUDIO) {
+			RTMP_Log(RTMP_LOGWARNING, "RTMPPacket_IsReady RTMP_PACKET_TYPE_AUDIO");
+			//memcpy(data, packet.m_body,packet.m_nBodySize);
+		}
+	}
+
+	return NULL;
+}
 /**
  * 发送RTMP数据包
  * @param nPacketType 数据类型

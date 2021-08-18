@@ -18,6 +18,7 @@ import com.deepblue.rtccall.rtc.RTCEngineConfig;
 import com.deepblue.rtccall.R;
 import com.deepblue.rtccall.bean.UserBean;
 import com.deepblue.rtccall.ims.DeepBlueVideoCallManger;
+import com.deepblue.rtccall.rtc.RtmpVideoCapture;
 import com.deepblue.webrtcpeer.rtc_plugins.ProxyRenderer;
 import com.nhancv.npermission.NPermission;
 
@@ -221,18 +222,18 @@ public class ChatSingleActivity extends AppCompatActivity implements NPermission
 
     @Override
     public VideoCapturer createVideoCapturer() {
-        VideoCapturer videoCapturer;
-        if (useCamera2()) {
-            if (!captureToTexture()) {
-                return null;
-            }
-            videoCapturer = createCameraCapturer(new Camera2Enumerator(this));
-        } else {
-            videoCapturer = createCameraCapturer(new Camera1Enumerator(captureToTexture()));
-        }
-        if (videoCapturer == null) {
-            return null;
-        }
+        VideoCapturer videoCapturer = new RtmpVideoCapture();
+//        if (useCamera2()) {
+//            if (!captureToTexture()) {
+//                return null;
+//            }
+//            videoCapturer = createCameraCapturer(new Camera2Enumerator(this));
+//        } else {
+//            videoCapturer = createCameraCapturer(new Camera1Enumerator(captureToTexture()));
+//        }
+//        if (videoCapturer == null) {
+//            return null;
+//        }
         return videoCapturer;
     }
 
