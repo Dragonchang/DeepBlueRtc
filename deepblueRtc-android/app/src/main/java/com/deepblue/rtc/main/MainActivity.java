@@ -54,9 +54,13 @@ public class MainActivity extends MvpActivity<MainView, MainPresenter> implement
 
     @ViewById(R.id.pullrtmp)
     protected Button pullrtmp;
+    protected EditText et;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        et = (EditText) findViewById(R.id.et);
         DeepBlueVideoCallManger.getInstance(this.getApplication());
         DeepBlueVideoCallManger.getInstance(this.getApplication()).registerImsMessageCallBack(this);
     }
@@ -91,8 +95,15 @@ public class MainActivity extends MvpActivity<MainView, MainPresenter> implement
 
     @Click(R.id.pullrtmp)
     protected void pullrtmpClick() {
-        RtmpReceiver.newInstance().init("rtmp://10.16.35.160/live/livestream", "/sdcard/log.text");
-
+        //RtmpReceiver.newInstance().init("rtmp://10.16.35.160/live/livestream", "/sdcard/log.text");
+        String rtmpUrl = "rtmp://10.16.35.160/live/livestream";
+        if (TextUtils.isEmpty(rtmpUrl)) {
+            Toast.makeText(MainActivity.this, "请输入播放地址", Toast.LENGTH_SHORT).show();
+        } else {
+            Intent intent = new Intent(MainActivity.this, PlayerAty.class);
+            intent.putExtra("rtmp_url", rtmpUrl);
+            startActivity(intent);
+        }
     }
 
     @NonNull

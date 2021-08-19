@@ -59,45 +59,94 @@ RtmpReceiver* CRtmpWrap::receivePacket()
 {
 	RTMPPacket packet = { 0 }, ps = { 0 };
 	RTMP_Log(RTMP_LOGWARNING, "receivePacket ***********begin");
-	int ret = RTMP_ReadPacket(m_pRtmp, &packet);
-	if(ret < 0)
-	{
-		RTMP_Log(RTMP_LOGWARNING, "receivePacket error");
-		return NULL;
-	}
-	if(ret == 0)
-	{
-		RTMP_Log(RTMP_LOGWARNING, "receivePacket 0");
-		return NULL;
-	}
-	RTMP_Log(RTMP_LOGWARNING, "RTMPPacket_IsReady 0");
-	if (RTMPPacket_IsReady(&packet))
-	{
-		RTMP_Log(RTMP_LOGWARNING, "RTMPPacket_IsReady 1111");
-		RTMP_ClientPacket(m_pRtmp, &packet);
-		RTMP_Log(RTMP_LOGWARNING, "RTMPPacket_IsReady 2222222222");
-		if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO) {
-			RTMP_Log(RTMP_LOGWARNING, "RTMPPacket_IsReady RTMP_PACKET_TYPE_VIDEO %d",packet.m_nBodySize);
-			bool keyframe = 0x17 == packet.m_body[0] ? true : false;
-			bool sequence = 0x00 == packet.m_body[1];
-			if(packet.m_nBodySize >0)
-			{
-			    //if(sequence) {
-                    RtmpReceiver *receiver = new RtmpReceiver();
-                    char* frame = (char *)malloc(packet.m_nBodySize);
-                    RTMP_Log(RTMP_LOGWARNING,"keyframe=%s, sequence=%s\n", keyframe ? "true" : "false", sequence ? "true" : "false");
-                    memcpy(frame, packet.m_body,packet.m_nBodySize);
-                    receiver->frame = frame;
-                    receiver->frameSize = packet.m_nBodySize;
-                    return receiver;
-			    //} else {
-
-			    //}
-
+	int ret = -1;
+	while ((ret = RTMP_ReadPacket(m_pRtmp, &packet))>0) {
+		if(ret < 0)
+		{
+			RTMP_Log(RTMP_LOGWARNING, "receivePacket error");
+			break;
+		}
+		if(ret == 0)
+		{
+			RTMP_Log(RTMP_LOGWARNING, "receivePacket 0");
+			break;
+		}
+		RTMP_Log(RTMP_LOGWARNING, "RTMPPacket_IsReady 0");
+		if (RTMPPacket_IsReady(&packet))
+		{
+			RTMP_Log(RTMP_LOGWARNING, "RTMPPacket_IsReady 1111");
+			RTMP_ClientPacket(m_pRtmp, &packet);
+			RTMP_Log(RTMP_LOGWARNING, "RTMPPacket_IsReady 2222222222");
+			if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO) {
+				RTMP_Log(RTMP_LOGWARNING, "RTMPPacket_IsReady RTMP_PACKET_TYPE_VIDEO %d",packet.m_nBodySize);
+				bool keyframe = 0x17 == packet.m_body[0] ? true : false;
+				bool sequence = 0x00 == packet.m_body[1];
+				if(packet.m_nBodySize >0)
+				{
+					RTMP_Log(RTMP_LOGWARNING,"keyframe=%s, sequence=%s\n", keyframe ? "true" : "false", sequence ? "true" : "false");
+					if(sequence) {
+						RtmpReceiver *receiver = new RtmpReceiver();
+						uint32_t offset = 10;
+						uint32_t sps_num = packet.m_body[offset++] & 0x1f;
+						RTMP_Log(RTMP_LOGWARNING, "*******************sps_num %d",sps_num);
+						char* frame = (char *)malloc(4);
+						uint32_t frameSize = 0;
+						for (int i = 0; i < sps_num; i++) {
+							uint8_t ch0 = packet.m_body[offset];
+							uint8_t ch1 = packet.m_body[offset + 1];
+							uint32_t sps_len = ((ch0 << 8) | ch1);
+							offset += 2;
+							// Write sps data
+							memcpy(frame, nalu_header, 4);
+							frameSize = frameSize + 4;
+							frame = (char *)realloc(frame, sps_len);
+							memcpy(frame + 4, packet.m_body + offset, sps_len);
+							frameSize = frameSize + sps_len;
+							offset += sps_len;
+						}
+						uint32_t pps_num = packet.m_body[offset++] & 0x1f;
+						RTMP_Log(RTMP_LOGWARNING, "*******************pps_num %d",pps_num);
+						for (int i = 0; i < pps_num; i++) {
+							uint8_t ch0 = packet.m_body[offset];
+							uint8_t ch1 = packet.m_body[offset + 1];
+							uint32_t pps_len = ((ch0 << 8) | ch1);
+							offset += 2;
+							// Write pps data
+							frame = (char *)realloc(frame, 4);
+							memcpy(frame, nalu_header, 4);
+							frameSize = frameSize + 4;
+							frame = (char *)realloc(frame, pps_len);
+							memcpy(frame + 4, packet.m_body + offset, pps_len);
+							frameSize = frameSize + pps_len;
+							offset += pps_len;
+						}
+						receiver->frame = frame;
+						receiver->frameSize = frameSize;
+						return receiver;
+					} else {
+						RtmpReceiver *receiver = new RtmpReceiver();
+						uint32_t offset = 5;
+						uint8_t ch0 = packet.m_body[offset];
+						uint8_t ch1 = packet.m_body[offset + 1];
+						uint8_t ch2 = packet.m_body[offset + 2];
+						uint8_t ch3 = packet.m_body[offset + 3];
+						uint32_t data_len = ((ch0 << 24) | (ch1 << 16) | (ch2 << 8) | ch3);
+						RTMP_Log(RTMP_LOGWARNING, "*******************nalu data %d",data_len);
+						char* frame = (char *)malloc(data_len);
+						offset += 4;
+						memcpy(frame, packet.m_body + offset, data_len);
+						receiver->frame = frame;
+						receiver->frameSize = data_len;
+						return receiver;
+					}
+				}
+			} else if (packet.m_packetType == RTMP_PACKET_TYPE_AUDIO) {
+				RTMP_Log(RTMP_LOGWARNING, "RTMPPacket_IsReady RTMP_PACKET_TYPE_AUDIO");
+				break;
 			}
-		} else if (packet.m_packetType == RTMP_PACKET_TYPE_AUDIO) {
-			RTMP_Log(RTMP_LOGWARNING, "RTMPPacket_IsReady RTMP_PACKET_TYPE_AUDIO");
-			//memcpy(data, packet.m_body,packet.m_nBodySize);
+			break;
+		} else {
+			RTMP_Log(RTMP_LOGWARNING, "RTMPPacket_IsReady 继续读取chunk！！！！！！");
 		}
 	}
 

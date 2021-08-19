@@ -80,5 +80,16 @@
             android:layout_marginBottom="20dp"
             android:text="拉流"
             />
+        <EditText
+            android:id="@+id/et"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="请输入rtmp播放地址"
+            android:layout_toLeftOf="@id/pullrtmp"
+            android:layout_marginLeft="10dip"
+            android:layout_marginTop="10dip"
+            android:text="rtmp://10.16.35.160/live/livestream"
+            />
     </LinearLayout>
 </LinearLayout>

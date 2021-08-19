@@ -14,7 +14,7 @@ class CRtmpWrap
 {
 private:
 	RTMP* m_pRtmp;                   //RTMP协议对象
-
+	uint8_t nalu_header[4] = { 0x00, 0x00, 0x00, 0x01 };
 private:
 	/**
 	 * 发送RTMP数据包
